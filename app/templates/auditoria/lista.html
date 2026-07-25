@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block titulo %}Auditoría{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <h1 class="g1-page-title">Registro de auditoría</h1>
+    <p class="g1-page-sub">Bitácora completa de acciones realizadas en el sistema.</p>
+  </div>
+</div>
+
+<div class="g1-card">
+  <div class="g1-card-header">
+    <form method="get" class="g1-toolbar">
+      <div class="g1-search">
+        <i class="bi bi-search"></i>
+        <input type="text" name="q" value="{{ busqueda }}" placeholder="Buscar por usuario, descripción o IP...">
+      </div>
+      <select name="accion" class="form-select" onchange="this.form.submit()">
+        <option value="">Todas las acciones</option>
+        <option value="crear" {% if accion == 'crear' %}selected{% endif %}>Crear</option>
+        <option value="editar" {% if accion == 'editar' %}selected{% endif %}>Editar</option>
+        <option value="eliminar" {% if accion == 'eliminar' %}selected{% endif %}>Eliminar</option>
+        <option value="exportar_pdf" {% if accion == 'exportar_pdf' %}selected{% endif %}>Exportar PDF</option>
+        <option value="enviar_correo" {% if accion == 'enviar_correo' %}selected{% endif %}>Enviar correo</option>
+        <option value="login" {% if accion == 'login' %}selected{% endif %}>Login</option>
+        <option value="logout" {% if accion == 'logout' %}selected{% endif %}>Logout</option>
+      </select>
+      <select name="modulo" class="form-select" onchange="this.form.submit()">
+        <option value="">Todos los módulos</option>
+        <option value="auth" {% if modulo == 'auth' %}selected{% endif %}>Autenticación</option>
+        <option value="clientes" {% if modulo == 'clientes' %}selected{% endif %}>Clientes</option>
+        <option value="productos" {% if modulo == 'productos' %}selected{% endif %}>Productos</option>
+        <option value="cotizaciones" {% if modulo == 'cotizaciones' %}selected{% endif %}>Cotizaciones</option>
+        <option value="cuentas_cobro" {% if modulo == 'cuentas_cobro' %}selected{% endif %}>Cuentas de cobro</option>
+        <option value="empresas" {% if modulo == 'empresas' %}selected{% endif %}>Empresas</option>
+        <option value="usuarios" {% if modulo == 'usuarios' %}selected{% endif %}>Usuarios</option>
+        <option value="layouts" {% if modulo == 'layouts' %}selected{% endif %}>Plantillas</option>
+      </select>
+      <button class="btn btn-light"><i class="bi bi-funnel"></i> Filtrar</button>
+    </form>
+  </div>
+
+  <div class="g1-card-body p-0" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+    {% if paginacion.items %}
+      <table class="g1-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Acción</th>
+            <th>Módulo</th>
+            <th>Descripción</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in paginacion.items %}
+          <tr>
+            <td class="text-muted text-small">{{ r.fecha.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+            <td>{{ r.usuario_nombre or '—' }}</td>
+            <td>
+              <span class="g1-badge g1-badge-{{ {'crear':'success','editar':'info','eliminar':'danger','exportar_pdf':'secondary','enviar_correo':'primary','login':'success','logout':'secondary'}.get(r.accion, 'secondary') }}">
+                {{ r.accion }}
+              </span>
+            </td>
+            <td><span class="g1-code">{{ r.modulo or '—' }}</span></td>
+            <td>{{ r.descripcion or '—' }}</td>
+            <td class="text-muted text-small">{{ r.ip or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="px-3 pb-3">
+        {% with endpoint='auditoria.lista', extra_args={'q': busqueda, 'accion': accion, 'modulo': modulo} %}
+          {% include "partials/paginacion.html" %}
+        {% endwith %}
+      </div>
+    {% else %}
+      <div class="g1-empty">
+        <i class="bi bi-shield-check"></i>
+        <p>No hay registros que coincidan con los filtros.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

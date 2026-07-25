@@ -1,0 +1,367 @@
+/* ============================================================
+   GestiónOne - Mobile / iOS optimizations
+   Mantiene diseño desktop intacto, mejora experiencia táctil
+   ============================================================ */
+
+/* --- iOS safe areas & overscroll --- */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Padding inferior para safe-area en iPhones con notch */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .g1-page { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  .g1-sidebar { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* --- Overlay para sidebar móvil --- */
+.g1-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1029;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* ============================================================
+   TABLET (≤ 992px) — sidebar colapsado por defecto
+   ============================================================ */
+@media (max-width: 992px) {
+  .g1-sidebar {
+    width: var(--g1-sidebar-w-collapsed);
+  }
+  .g1-sidebar:not(.expanded) .brand-text,
+  .g1-sidebar:not(.expanded) .g1-nav-link .label,
+  .g1-sidebar:not(.expanded) .g1-nav-section {
+    opacity: 0; pointer-events: none;
+  }
+  .g1-sidebar.expanded { width: var(--g1-sidebar-w); }
+  .g1-main { margin-left: var(--g1-sidebar-w-collapsed); }
+
+  .layout-designer-shell { grid-template-columns: 1fr; }
+  .layout-designer-shell .panel { display: none; }
+
+  /* Reducir KPI grid a 2 cols */
+  .g1-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Tablas scroll horizontal */
+  .g1-card-body:has(.g1-table) { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* ============================================================
+   MÓVIL (≤ 768px) — sidebar drawer + rediseño completo
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* --- Sidebar como drawer --- */
+  .g1-sidebar {
+    width: var(--g1-sidebar-w);
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1040;
+  }
+  .g1-sidebar.expanded {
+    transform: translateX(0);
+  }
+  .g1-sidebar.expanded ~ .g1-sidebar-overlay + .g1-main .g1-sidebar-overlay,
+  .g1-sidebar-overlay.active {
+    display: block;
+  }
+  /* Mostrar siempre labels cuando abierto */
+  .g1-sidebar.expanded .brand-text,
+  .g1-sidebar.expanded .g1-nav-link .label,
+  .g1-sidebar.expanded .g1-nav-section {
+    opacity: 1 !important; pointer-events: auto !important;
+  }
+
+  .g1-main {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+
+  /* --- Topbar --- */
+  .g1-topbar {
+    padding: 0 12px;
+    height: 54px;
+    position: sticky;
+    top: 0;
+  }
+
+  /* --- Page --- */
+  .g1-page {
+    padding: 14px 12px 24px;
+  }
+
+  /* --- Page header: stack vertical --- */
+  .g1-page-header {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .g1-page-header h1 {
+    font-size: 18px;
+  }
+  .g1-page-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .g1-page-actions .btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+    font-size: 12.5px;
+    padding: 8px 10px;
+  }
+  .g1-page-actions form.d-inline {
+    flex: 1 1 auto;
+    display: flex !important;
+  }
+  .g1-page-actions form.d-inline .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* --- KPIs --- */
+  .g1-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .g1-kpi {
+    padding: 12px 14px;
+  }
+  .g1-kpi-value {
+    font-size: 20px;
+  }
+  .g1-kpi-icon {
+    width: 32px; height: 32px;
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  /* --- Cards --- */
+  .g1-card {
+    border-radius: 8px;
+  }
+  .g1-card-header {
+    padding: 12px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .g1-card-body {
+    padding: 14px;
+  }
+
+  /* --- Bootstrap columns a full width --- */
+  .col-lg-4, .col-lg-8, .col-md-6, .col-md-7, .col-md-3, .col-md-2 {
+    /* Se manejan por Bootstrap, pero forzamos full width en detalle */
+  }
+  .row.g-3 > .col-lg-4,
+  .row.g-3 > .col-lg-8 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  /* --- Tablas responsive --- */
+  .g1-table-wrap,
+  .g1-card-body.p-0 {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .g1-table {
+    min-width: 500px;
+  }
+  .g1-table thead th {
+    padding: 8px 10px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+  .g1-table tbody td {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  /* Tabla de detalles en forms - más compacta */
+  .g1-table-detalle {
+    min-width: 600px;
+  }
+
+  /* --- Totales --- */
+  .g1-totales-row {
+    min-width: 200px;
+    gap: 16px;
+  }
+  .g1-totales-row.g1-totales-total .value {
+    font-size: 18px;
+  }
+
+  /* --- Forms --- */
+  .g1-form {
+    max-width: 100%;
+  }
+  .g1-form-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .g1-form-actions .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+  }
+
+  /* Touch-friendly inputs */
+  .form-control, .form-select {
+    font-size: 16px !important;  /* Evita zoom en iOS */
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+  textarea.form-control {
+    min-height: 80px;
+  }
+  .input-group .form-control {
+    min-height: 44px;
+  }
+
+  /* --- Botones touch-friendly --- */
+  .btn {
+    min-height: 40px;
+    padding: 8px 14px;
+  }
+  .btn-sm {
+    min-height: 36px;
+    padding: 6px 10px;
+  }
+
+  /* --- Flash messages --- */
+  .g1-flash-stack {
+    top: 60px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
+
+  /* --- Toolbar de filtros --- */
+  .g1-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .g1-search {
+    width: 100%;
+    min-width: unset;
+  }
+  .g1-toolbar .form-select {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* --- Pagination --- */
+  .g1-pagination {
+    justify-content: center;
+    gap: 3px;
+  }
+  .g1-pagination a, .g1-pagination span {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  /* --- Definition lists --- */
+  .g1-dl dt { font-size: 10px; }
+  .g1-dl dd { font-size: 13px; }
+
+  /* --- Login --- */
+  .g1-login-side { display: none; }
+  .g1-login-card { flex: 1; padding: 32px 20px; }
+  .g1-login-card h1 { font-size: 22px; }
+
+  .g1-login-shell--single { padding: 16px; }
+  .g1-login-shell--single .g1-login-card { padding: 28px 20px; }
+
+  /* --- User chip (topbar) --- */
+  .g1-user-chip {
+    padding: 3px 6px 3px 3px;
+  }
+
+  /* --- Credenciales grid --- */
+  .g1-credenciales-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* --- Tipografías selector --- */
+  .g1-tipografias {
+    grid-template-columns: 1fr;
+  }
+
+  /* --- Breadcrumb text truncate --- */
+  .g1-breadcrumb {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  /* --- Dropdown menus --- */
+  .dropdown-menu {
+    min-width: auto;
+    font-size: 14px;
+  }
+
+  /* --- Enviar por correo section compact --- */
+  .col-lg-4 .g1-card .form-control {
+    font-size: 14px !important;
+  }
+}
+
+/* ============================================================
+   MÓVIL PEQUEÑO (≤ 480px) — extra compact
+   ============================================================ */
+@media (max-width: 480px) {
+  .g1-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .g1-kpi {
+    padding: 10px 12px;
+  }
+  .g1-kpi-value {
+    font-size: 18px;
+  }
+  .g1-kpi-label {
+    font-size: 11px;
+  }
+  .g1-kpi-link {
+    font-size: 11px;
+  }
+  .g1-kpi-icon {
+    width: 28px; height: 28px;
+    font-size: 13px;
+    border-radius: 7px;
+  }
+
+  .g1-page-header h1 {
+    font-size: 16px;
+  }
+  .g1-page-sub {
+    font-size: 12px;
+  }
+
+  /* Totales compactos */
+  .g1-totales-row {
+    min-width: 180px;
+    font-size: 13px;
+  }
+  .g1-totales-row.g1-totales-total .value {
+    font-size: 16px;
+  }
+
+  /* Card footer padding */
+  .g1-card-footer {
+    padding: 12px;
+  }
+}

@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block titulo %}Credenciales — {{ cliente.nombre }}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb">
+      <a href="{{ url_for('clientes.lista') }}">Clientes</a> /
+      <a href="{{ url_for('clientes.detalle', id=cliente.id) }}">{{ cliente.nombre }}</a> /
+      <a href="{{ url_for('infraestructura.hub', cliente_id=cliente.id) }}">Infraestructura</a> /
+      <span>Credenciales</span>
+    </nav>
+    <h1 class="g1-page-title">
+      <i class="bi bi-key-fill text-warning"></i> Credenciales y accesos
+    </h1>
+    <p class="g1-page-sub">
+      Contraseñas cifradas con AES-128. Solo administradores pueden ver y editar.
+    </p>
+  </div>
+  <div class="g1-page-actions">
+    {% if cifrado_ok %}
+      <a href="{{ url_for('infraestructura.credencial_nueva', cliente_id=cliente.id) }}"
+         class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nueva credencial
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+{% if not cifrado_ok %}
+<div class="alert alert-danger">
+  <i class="bi bi-shield-exclamation"></i>
+  <strong>El cifrado no está configurado.</strong>
+  Para poder guardar credenciales necesitas definir la variable de entorno
+  <code>ENCRYPTION_KEY</code>. Genera una con:
+  <pre class="mt-2 mb-0"><code>python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"</code></pre>
+  <small class="d-block mt-2">
+    ⚠ Guárdala bien: si la pierdes, las credenciales cifradas quedan irrecuperables.
+  </small>
+</div>
+{% else %}
+
+  {% if credenciales %}
+    <div class="g1-credenciales-grid">
+      {% for cred in credenciales %}
+      <div class="g1-cred-card" data-cred-id="{{ cred.id }}">
+        <div class="g1-cred-header" style="--cat-color: {{ cred.categoria_color }};">
+          <i class="bi {{ cred.categoria_icono }}"></i>
+          <div class="g1-cred-header-text">
+            <span class="g1-cred-category">{{ cred.categoria_label }}</span>
+            <span class="g1-cred-title">{{ cred.nombre }}</span>
+          </div>
+          <div class="dropdown ms-auto">
+            <button class="btn btn-sm btn-light" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-three-dots"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a class="dropdown-item"
+                   href="{{ url_for('infraestructura.credencial_editar', cliente_id=cliente.id, cred_id=cred.id) }}">
+                  <i class="bi bi-pencil me-2"></i> Editar
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="post"
+                      action="{{ url_for('infraestructura.credencial_eliminar', cliente_id=cliente.id, cred_id=cred.id) }}"
+                      onsubmit="return confirm('¿Eliminar la credencial {{ cred.nombre|e }}? Esta acción es permanente.');">
+                  <button class="dropdown-item text-danger">
+                    <i class="bi bi-trash me-2"></i> Eliminar
+                  </button>
+                </form>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="g1-cred-body">
+          {% if cred.url %}
+          <div class="g1-cred-row">
+            <span class="g1-cred-label">URL / Host</span>
+            <div class="g1-cred-value">
+              <span class="g1-cred-text">{{ cred.url }}{% if cred.puerto %}:{{ cred.puerto }}{% endif %}</span>
+              <button type="button" class="g1-cred-action" data-copy="{{ cred.url }}{% if cred.puerto %}:{{ cred.puerto }}{% endif %}" title="Copiar">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if cred.usuario %}
+          <div class="g1-cred-row">
+            <span class="g1-cred-label">Usuario</span>
+            <div class="g1-cred-value">
+              <span class="g1-cred-text">{{ cred.usuario }}</span>
+              <button type="button" class="g1-cred-action" data-copy="{{ cred.usuario }}" title="Copiar">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if cred.password_cifrado %}
+          <div class="g1-cred-row">
+            <span class="g1-cred-label">Contraseña</span>
+            <div class="g1-cred-value">
+              <span class="g1-cred-text g1-cred-password"
+                    data-cred-id="{{ cred.id }}"
+                    data-state="hidden">••••••••••••</span>
+              <button type="button" class="g1-cred-action btn-reveal"
+                      data-cred-id="{{ cred.id }}"
+                      title="Mostrar / ocultar">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button type="button" class="g1-cred-action btn-copy-pass"
+                      data-cred-id="{{ cred.id }}"
+                      title="Copiar al portapapeles">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if cred.sede %}
+          <div class="g1-cred-meta">
+            <i class="bi bi-building"></i> Sede: {{ cred.sede.nombre }}
+          </div>
+          {% endif %}
+
+          {% if cred.notas %}
+          <div class="g1-cred-notas">
+            <i class="bi bi-info-circle"></i> {{ cred.notas }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="g1-card">
+      <div class="g1-card-body">
+        <div class="g1-empty">
+          <i class="bi bi-key"></i>
+          <p>Aún no has registrado credenciales para este cliente.</p>
+          <a href="{{ url_for('infraestructura.credencial_nueva', cliente_id=cliente.id) }}"
+             class="btn btn-primary">Crear primera credencial</a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+{% endif %}
+
+<script>
+(function() {
+  const csrfToken = '';  // Si tienes CSRF, ponerlo aquí. Por ahora va vacío.
+  const clienteId = {{ cliente.id }};
+
+  // Helper para mostrar feedback visual
+  function flash(el, msg, isErr) {
+    const t = el.title;
+    el.title = msg;
+    el.style.color = isErr ? '#dc2626' : '#16a34a';
+    setTimeout(() => { el.title = t; el.style.color = ''; }, 1500);
+  }
+
+  async function copyToClipboard(text, btn) {
+    try {
+      await navigator.clipboard.writeText(text);
+      const icon = btn.querySelector('i');
+      if (icon) {
+        icon.classList.remove('bi-clipboard');
+        icon.classList.add('bi-check-lg');
+        setTimeout(() => {
+          icon.classList.remove('bi-check-lg');
+          icon.classList.add('bi-clipboard');
+        }, 1200);
+      }
+    } catch (e) {
+      flash(btn, 'No se pudo copiar', true);
+    }
+  }
+
+  // Copia simple (URL, usuario)
+  document.querySelectorAll('[data-copy]').forEach(btn => {
+    btn.addEventListener('click', () => copyToClipboard(btn.dataset.copy, btn));
+  });
+
+  // Cache local de passwords descifrados (en memoria, se pierde al recargar)
+  const cache = {};
+
+  async function fetchPassword(credId) {
+    if (cache[credId]) return cache[credId];
+    const resp = await fetch(
+      `/clientes/${clienteId}/infraestructura/credenciales/${credId}/revelar`,
+      { method: 'POST', headers: {'X-Requested-With': 'fetch'} }
+    );
+    const data = await resp.json();
+    if (data.ok) {
+      cache[credId] = data.password;
+      return data.password;
+    } else {
+      throw new Error(data.error || 'No autorizado');
+    }
+  }
+
+  // Botones de revelar/ocultar password
+  document.querySelectorAll('.btn-reveal').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const credId = btn.dataset.credId;
+      const span = document.querySelector(`.g1-cred-password[data-cred-id="${credId}"]`);
+      const icon = btn.querySelector('i');
+
+      if (span.dataset.state === 'hidden') {
+        try {
+          const password = await fetchPassword(credId);
+          span.textContent = password || '(sin contraseña)';
+          span.dataset.state = 'shown';
+          icon.classList.remove('bi-eye');
+          icon.classList.add('bi-eye-slash');
+        } catch (e) {
+          flash(btn, e.message, true);
+        }
+      } else {
+        span.textContent = '••••••••••••';
+        span.dataset.state = 'hidden';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+      }
+    });
+  });
+
+  // Botones de copiar password (sin necesidad de mostrarla)
+  document.querySelectorAll('.btn-copy-pass').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const credId = btn.dataset.credId;
+      try {
+        const password = await fetchPassword(credId);
+        await copyToClipboard(password, btn);
+      } catch (e) {
+        flash(btn, e.message, true);
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

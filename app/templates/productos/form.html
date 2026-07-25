@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block titulo %}{% if producto %}Editar producto{% else %}Nuevo producto{% endif %}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb"><a href="{{ url_for('productos.lista') }}">Productos</a> / <span>{% if producto %}{{ producto.codigo }}{% else %}Nuevo{% endif %}</span></nav>
+    <h1 class="g1-page-title">{% if producto %}Editar producto{% else %}Nuevo producto{% endif %}</h1>
+  </div>
+</div>
+
+<form method="post" class="g1-form">
+  <div class="g1-card">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-tag-fill"></i> Información del producto</h3>
+    </div>
+    <div class="g1-card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label required">Código</label>
+          <input type="text" name="codigo" class="form-control"
+                 value="{{ producto.codigo if producto else '' }}" required autofocus>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label required">Nombre</label>
+          <input type="text" name="nombre" class="form-control" value="{{ producto.nombre if producto else '' }}" required>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Descripción</label>
+          <textarea name="descripcion" rows="3" class="form-control">{{ producto.descripcion if producto else '' }}</textarea>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label required">Precio unitario</label>
+          <div class="input-group">
+            <span class="input-group-text">$</span>
+            <input type="number" min="0" step="0.01" name="precio" class="form-control text-end"
+                   value="{{ producto.precio if producto else 0 }}" required>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">IVA (%)</label>
+          <div class="input-group">
+            <input type="number" min="0" max="100" step="0.1" name="iva" class="form-control text-end"
+                   value="{{ producto.iva if producto else 19 }}">
+            <span class="input-group-text">%</span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Estado</label>
+          <select name="estado" class="form-select">
+            <option value="activo" {% if producto and producto.estado == 'activo' %}selected{% elif not producto %}selected{% endif %}>Activo</option>
+            <option value="inactivo" {% if producto and producto.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-form-actions">
+    <a href="{{ url_for('productos.lista') }}" class="btn btn-light">Cancelar</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-lg"></i> {% if producto %}Guardar cambios{% else %}Crear producto{% endif %}
+    </button>
+  </div>
+</form>
+{% endblock %}

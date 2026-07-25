@@ -1,0 +1,58 @@
+{% if paginacion.items %}
+<table class="g1-table">
+  <thead>
+    <tr>
+      <th>Código</th>
+      <th>Nombre</th>
+      <th class="text-end">Precio</th>
+      <th class="text-end">IVA</th>
+      <th>Estado</th>
+      <th class="text-end">Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in paginacion.items %}
+    <tr>
+      <td><span class="g1-code">{{ p.codigo }}</span></td>
+      <td>
+        <div class="fw-semibold">{{ p.nombre }}</div>
+        {% if p.descripcion %}<div class="text-muted text-small">{{ p.descripcion|truncate(80) }}</div>{% endif %}
+      </td>
+      <td class="text-end fw-semibold">{{ p.precio|moneda }}</td>
+      <td class="text-end">{{ "%.1f"|format(p.iva) }}%</td>
+      <td><span class="g1-badge {{ p.estado|badge_estado }}">{{ p.estado }}</span></td>
+      <td class="text-end">
+        <div class="g1-row-actions">
+          {% if current_user.puede_editar %}
+            <a href="{{ url_for('productos.editar', id=p.id) }}" class="btn btn-sm btn-light" title="Editar">
+              <i class="bi bi-pencil"></i>
+            </a>
+          {% endif %}
+          {% if current_user.es_admin %}
+            <form method="post" action="{{ url_for('productos.eliminar', id=p.id) }}"
+                  onsubmit="return confirm('¿Eliminar el producto {{ p.codigo|e }}?');" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-light text-danger" title="Eliminar">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<div class="px-3 pb-3">
+  {% with endpoint='productos.lista', extra_args={'q': busqueda} %}
+    {% include "partials/paginacion.html" %}
+  {% endwith %}
+</div>
+{% else %}
+  <div class="g1-empty">
+    <i class="bi bi-box-seam"></i>
+    <p>{% if busqueda %}No se encontraron productos para "<strong>{{ busqueda }}</strong>".{% else %}Aún no tienes productos registrados.{% endif %}</p>
+    {% if current_user.puede_editar %}
+      <a href="{{ url_for('productos.nuevo') }}" class="btn btn-primary">Agregar el primero</a>
+    {% endif %}
+  </div>
+{% endif %}

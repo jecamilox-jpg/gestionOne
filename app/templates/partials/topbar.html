@@ -1,0 +1,50 @@
+{# Topbar superior #}
+<header class="g1-topbar">
+  <button class="g1-topbar-btn" id="g1-sidebar-toggle" title="Mostrar/ocultar menú">
+    <i class="bi bi-list" style="font-size: 18px;"></i>
+  </button>
+
+  <div class="g1-topbar-title">{% block topbar_titulo %}{% endblock %}</div>
+
+  <div class="ms-auto d-flex align-items-center gap-2">
+    {% if current_user.is_authenticated %}
+      <div class="dropdown">
+        <div class="g1-user-chip" data-bs-toggle="dropdown" aria-expanded="false" role="button">
+          <div class="g1-avatar">
+            {{ (current_user.nombre_completo or current_user.username)[:1] | upper }}
+          </div>
+          <div class="d-none d-md-block text-small">
+            <div class="fw-medium" style="line-height:1.1">{{ current_user.nombre_completo }}</div>
+            <div class="text-muted" style="font-size: 11px;">{{ current_user.rol | capitalize }}</div>
+          </div>
+          <i class="bi bi-chevron-down text-muted" style="font-size:12px"></i>
+        </div>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 10px; border-color: var(--g1-border);">
+          <li class="px-3 py-2">
+            <div class="text-small fw-medium">{{ current_user.nombre_completo }}</div>
+            <div class="text-muted" style="font-size:12px;">{{ current_user.correo }}</div>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          {% if current_user.es_admin %}
+            <li>
+              <a class="dropdown-item" href="{{ url_for('usuarios.lista') }}">
+                <i class="bi bi-people me-2"></i> Usuarios
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{{ url_for('empresas.lista') }}">
+                <i class="bi bi-building me-2"></i> Empresas
+              </a>
+            </li>
+          {% endif %}
+          <li>
+            <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+              <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+            </a>
+          </li>
+        </ul>
+      </div>
+    {% endif %}
+  </div>
+</header>

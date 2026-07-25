@@ -1,0 +1,43 @@
+{# Vista de restablecimiento de contraseña con token. #}
+{% extends "base.html" %}
+
+{% block contenido_raiz %}
+<div class="g1-auth-screen">
+  <div class="g1-auth-card">
+    <div class="g1-auth-brand">
+      <div class="logo-mark">G1</div>
+      <span>GestiónOne</span>
+    </div>
+    <h1 class="g1-auth-title">Nueva contraseña</h1>
+    <p class="g1-auth-sub">Define una contraseña segura para tu cuenta. Mínimo 6 caracteres.</p>
+
+    <div class="g1-flash-stack mb-3">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div class="alert alert-{{ cat if cat in ['success','danger','warning','info'] else 'info' }}">
+            <i class="bi bi-info-circle-fill"></i><div>{{ msg }}</div>
+          </div>
+        {% endfor %}
+      {% endwith %}
+    </div>
+
+    <form method="post" action="{{ url_for('auth.restablecer_password', token=token) }}" class="g1-auth-form">
+      <label for="password">Nueva contraseña</label>
+      <input type="password" id="password" name="password" required minlength="6" autofocus>
+
+      <label for="password2">Confirmar contraseña</label>
+      <input type="password" id="password2" name="password2" required minlength="6">
+
+      <button type="submit" class="btn-auth">
+        <i class="bi bi-shield-lock-fill"></i> Restablecer contraseña
+      </button>
+
+      <div class="auth-extra-link">
+        <a href="{{ url_for('auth.login') }}">
+          <i class="bi bi-arrow-left"></i> Volver al inicio de sesión
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

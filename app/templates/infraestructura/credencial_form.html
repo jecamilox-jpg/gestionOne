@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block titulo %}{% if credencial %}Editar credencial{% else %}Nueva credencial{% endif %}{% endblock %}
+
+{% block contenido %}
+{% set cat_labels = {
+  'ftp': 'FTP / SFTP',
+  'panel_hosting': 'Panel de hosting (cPanel, Plesk)',
+  'panel_dominio': 'Panel de dominio (DNS)',
+  'correo_admin': 'Correo administrador',
+  'wifi': 'Red WiFi',
+  'rdp_ssh': 'Acceso remoto (RDP / SSH)',
+  'base_datos': 'Base de datos',
+  'api': 'API / Token',
+  'cms': 'CMS (WordPress, Drupal, etc.)',
+  'servicio_externo': 'Servicio externo (SaaS)',
+  'vpn': 'VPN',
+  'otro': 'Otro'
+} %}
+
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb">
+      <a href="{{ url_for('clientes.lista') }}">Clientes</a> /
+      <a href="{{ url_for('clientes.detalle', id=cliente.id) }}">{{ cliente.nombre }}</a> /
+      <a href="{{ url_for('infraestructura.hub', cliente_id=cliente.id) }}">Infraestructura</a> /
+      <a href="{{ url_for('infraestructura.credenciales', cliente_id=cliente.id) }}">Credenciales</a> /
+      <span>{% if credencial %}{{ credencial.nombre }}{% else %}Nueva{% endif %}</span>
+    </nav>
+    <h1 class="g1-page-title">
+      <i class="bi bi-key-fill text-warning"></i>
+      {% if credencial %}Editar credencial{% else %}Nueva credencial{% endif %}
+    </h1>
+  </div>
+</div>
+
+<form method="post" class="g1-form">
+  <div class="g1-card">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-tag"></i> Identificación</h3>
+    </div>
+    <div class="g1-card-body">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label required">Categoría</label>
+          <select name="categoria" class="form-select" required>
+            {% for c in categorias %}
+              <option value="{{ c }}" {% if credencial and credencial.categoria == c %}selected{% endif %}>
+                {{ cat_labels.get(c, c) }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-7">
+          <label class="form-label required">Nombre descriptivo</label>
+          <input type="text" name="nombre" class="form-control" required autofocus
+                 placeholder="Ej: FTP Hosting Principal, WiFi Recepción..."
+                 value="{{ credencial.nombre if credencial else '' }}">
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label">Sede (opcional)</label>
+          <select name="sede_id" class="form-select">
+            <option value="">— No asociar a sede específica —</option>
+            {% for s in sedes %}
+              <option value="{{ s.id }}"
+                      {% if credencial and credencial.sede_id == s.id %}selected{% endif %}>
+                {{ s.nombre }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-card mt-3">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-link-45deg"></i> Conexión</h3>
+    </div>
+    <div class="g1-card-body">
+      <div class="row g-3">
+        <div class="col-md-9">
+          <label class="form-label">URL / Host</label>
+          <input type="text" name="url" class="form-control"
+                 placeholder="ftp.midominio.com, 192.168.1.1, https://panel.hostingsite.com..."
+                 value="{{ credencial.url if credencial else '' }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Puerto</label>
+          <input type="text" name="puerto" class="form-control"
+                 placeholder="21, 22, 3306..."
+                 value="{{ credencial.puerto if credencial else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Usuario</label>
+          <input type="text" name="usuario" class="form-control"
+                 autocomplete="off"
+                 value="{{ credencial.usuario if credencial else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">
+            Contraseña
+            {% if credencial %}
+              <small class="text-muted">(deja en blanco para no cambiarla)</small>
+            {% endif %}
+          </label>
+          <div class="input-group">
+            <input type="password" name="password" class="form-control" id="passwordField"
+                   autocomplete="new-password"
+                   placeholder="{% if credencial %}••••••••{% else %}Nueva contraseña{% endif %}">
+            <button type="button" class="btn btn-light" onclick="togglePassword()" title="Mostrar/ocultar">
+              <i class="bi bi-eye" id="passwordEye"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-card mt-3">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-journal-text"></i> Notas adicionales</h3>
+    </div>
+    <div class="g1-card-body">
+      <textarea name="notas" rows="3" class="form-control"
+                placeholder="Instrucciones especiales, recordatorios, restricciones de acceso...">{{ credencial.notas if credencial else '' }}</textarea>
+    </div>
+  </div>
+
+  <div class="g1-form-actions">
+    <a href="{{ url_for('infraestructura.credenciales', cliente_id=cliente.id) }}"
+       class="btn btn-light">Cancelar</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-shield-lock"></i>
+      {% if credencial %}Guardar cambios{% else %}Crear y cifrar{% endif %}
+    </button>
+  </div>
+
+  <div class="text-center mt-3">
+    <small class="text-muted">
+      <i class="bi bi-shield-check"></i>
+      La contraseña se cifra antes de guardarse. Nadie (ni siquiera la base de datos) puede leerla sin la clave maestra.
+    </small>
+  </div>
+</form>
+
+<script>
+function togglePassword() {
+  const field = document.getElementById('passwordField');
+  const eye = document.getElementById('passwordEye');
+  if (field.type === 'password') {
+    field.type = 'text';
+    eye.classList.replace('bi-eye', 'bi-eye-slash');
+  } else {
+    field.type = 'password';
+    eye.classList.replace('bi-eye-slash', 'bi-eye');
+  }
+}
+</script>
+{% endblock %}

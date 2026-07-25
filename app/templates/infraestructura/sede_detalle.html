@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block titulo %}{{ sede.nombre }} — {{ cliente.nombre }}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb">
+      <a href="{{ url_for('clientes.lista') }}">Clientes</a> /
+      <a href="{{ url_for('clientes.detalle', id=cliente.id) }}">{{ cliente.nombre }}</a> /
+      <a href="{{ url_for('infraestructura.hub', cliente_id=cliente.id) }}">Infraestructura</a> /
+      <span>{{ sede.nombre }}</span>
+    </nav>
+    <h1 class="g1-page-title">
+      <i class="bi bi-building"></i> {{ sede.nombre }}
+    </h1>
+    <p class="g1-page-sub">
+      {% if sede.ciudad %}{{ sede.ciudad }} · {% endif %}
+      {% if sede.direccion %}{{ sede.direccion }}{% endif %}
+      {% if sede.responsable %} · Responsable: <strong>{{ sede.responsable }}</strong>{% endif %}
+    </p>
+  </div>
+  <div class="g1-page-actions">
+    <a href="{{ url_for('infraestructura.diagrama', sede_id=sede.id) }}"
+       class="btn btn-light"><i class="bi bi-diagram-3"></i> Ver diagrama</a>
+    <a href="{{ url_for('infraestructura.sede_editar', cliente_id=cliente.id, sede_id=sede.id) }}"
+       class="btn btn-light"><i class="bi bi-pencil"></i> Editar sede</a>
+    <a href="{{ url_for('infraestructura.equipo_nuevo', sede_id=sede.id) }}"
+       class="btn btn-primary"><i class="bi bi-plus-lg"></i> Agregar equipo</a>
+  </div>
+</div>
+
+{% if sede.notas %}
+<div class="alert alert-info mb-3">
+  <i class="bi bi-info-circle-fill"></i>
+  <div class="ms-2">{{ sede.notas }}</div>
+</div>
+{% endif %}
+
+<div class="g1-card">
+  <div class="g1-card-header">
+    <h3 class="g1-card-title">
+      <i class="bi bi-hdd-network"></i> Inventario de equipos
+      <span class="text-muted text-small ms-2">{{ equipos|length }} equipo{{ 's' if equipos|length != 1 else '' }}</span>
+    </h3>
+  </div>
+  <div class="g1-card-body p-0">
+    {% if equipos %}
+      <table class="g1-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Marca / Modelo</th>
+            <th>IP</th>
+            <th>Ubicación</th>
+            <th>Conectado a</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for eq in equipos %}
+          <tr>
+            <td class="text-center">
+              <i class="bi {{ eq.tipo_icono }} fs-5 text-primary"></i>
+            </td>
+            <td>
+              <div class="fw-semibold">{{ eq.nombre }}</div>
+              {% if eq.mac %}<div class="text-muted text-small">{{ eq.mac }}</div>{% endif %}
+            </td>
+            <td>
+              <span class="g1-badge g1-badge-secondary">{{ eq.tipo_label }}</span>
+            </td>
+            <td>
+              {% if eq.marca or eq.modelo %}
+                <div>{{ eq.marca or '' }} {{ eq.modelo or '' }}</div>
+              {% else %}—{% endif %}
+              {% if eq.sistema_operativo %}<div class="text-muted text-small">{{ eq.sistema_operativo }}</div>{% endif %}
+            </td>
+            <td>{% if eq.ip %}<span class="g1-code">{{ eq.ip }}</span>{% else %}—{% endif %}</td>
+            <td>{{ eq.ubicacion_fisica or '—' }}</td>
+            <td>
+              {% if eq.padre %}
+                <i class="bi {{ eq.padre.tipo_icono }}"></i>
+                {{ eq.padre.nombre }}
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="g1-row-actions">
+                <a href="{{ url_for('infraestructura.equipo_editar', sede_id=sede.id, equipo_id=eq.id) }}"
+                   class="btn btn-sm btn-light" title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <form method="post"
+                      action="{{ url_for('infraestructura.equipo_eliminar', sede_id=sede.id, equipo_id=eq.id) }}"
+                      onsubmit="return confirm('¿Eliminar el equipo {{ eq.nombre|e }}?');" class="d-inline">
+                  <button class="btn btn-sm btn-light text-danger" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="g1-empty">
+        <i class="bi bi-hdd-network"></i>
+        <p>Aún no has registrado equipos en esta sede.</p>
+        <a href="{{ url_for('infraestructura.equipo_nuevo', sede_id=sede.id) }}"
+           class="btn btn-primary">Agregar primer equipo</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

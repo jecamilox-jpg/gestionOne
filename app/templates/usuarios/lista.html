@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block titulo %}Usuarios{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <h1 class="g1-page-title">Usuarios</h1>
+    <p class="g1-page-sub">Administra los usuarios del sistema y sus roles.</p>
+  </div>
+  <div class="g1-page-actions">
+    <a href="{{ url_for('usuarios.nuevo') }}" class="btn btn-primary">
+      <i class="bi bi-person-plus"></i> Nuevo usuario
+    </a>
+  </div>
+</div>
+
+<div class="g1-card">
+  <div class="g1-card-body p-0" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+    {% if usuarios %}
+      <table class="g1-table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Nombre completo</th>
+            <th>Correo</th>
+            <th>Rol</th>
+            <th>Empresa</th>
+            <th>Estado</th>
+            <th>Último ingreso</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in usuarios %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="g1-avatar">{{ u.nombre_completo[:1]|upper if u.nombre_completo else u.username[:1]|upper }}</div>
+                <span class="fw-semibold">{{ u.username }}</span>
+              </div>
+            </td>
+            <td>{{ u.nombre_completo }}</td>
+            <td>{{ u.correo }}</td>
+            <td>
+              {% if u.rol == 'administrador' %}
+                <span class="g1-badge g1-badge-info">Administrador</span>
+              {% elif u.rol == 'vendedor' %}
+                <span class="g1-badge g1-badge-primary">Vendedor</span>
+              {% else %}
+                <span class="g1-badge g1-badge-secondary">Consulta</span>
+              {% endif %}
+            </td>
+            <td>{{ u.empresa.nombre if u.empresa else '—' }}</td>
+            <td>
+              {% if u.activo %}
+                <span class="g1-badge g1-badge-success">Activo</span>
+              {% else %}
+                <span class="g1-badge g1-badge-secondary">Inactivo</span>
+              {% endif %}
+            </td>
+            <td class="text-muted text-small">{{ u.ultimo_login|fecha_es if u.ultimo_login else 'Nunca' }}</td>
+            <td class="text-end">
+              <div class="g1-row-actions">
+                <a href="{{ url_for('usuarios.editar', id=u.id) }}" class="btn btn-sm btn-light" title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                {% if u.id != current_user.id %}
+                  <form method="post" action="{{ url_for('usuarios.eliminar', id=u.id) }}"
+                        onsubmit="return confirm('¿Eliminar usuario {{ u.username|e }}?');" class="d-inline">
+                    <button class="btn btn-sm btn-light text-danger" title="Eliminar">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="g1-empty">
+        <i class="bi bi-people"></i>
+        <p>No hay usuarios registrados.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

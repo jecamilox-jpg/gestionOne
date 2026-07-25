@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block titulo %}{{ cuenta.consecutivo }}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb">
+      <a href="{{ url_for('cuentas_cobro.lista') }}">Cuentas de cobro</a> /
+      <span>{{ cuenta.consecutivo }}</span>
+    </nav>
+    <h1 class="g1-page-title">
+      Cuenta {{ cuenta.consecutivo }}
+      <span class="g1-badge {{ cuenta.estado|badge_estado }} ms-2">{{ cuenta.estado }}</span>
+    </h1>
+    <p class="g1-page-sub">Cliente: <strong>{{ cuenta.cliente.nombre }}</strong> · Fecha {{ cuenta.fecha|fecha_es }}</p>
+  </div>
+  <div class="g1-page-actions">
+    <a href="{{ url_for('cuentas_cobro.pdf', id=cuenta.id) }}" target="_blank" class="btn btn-light">
+      <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+    </a>
+
+    {% if cuenta.estado != 'pagada' and current_user.puede_editar %}
+      <a href="{{ url_for('cuentas_cobro.editar', id=cuenta.id) }}" class="btn btn-light">
+        <i class="bi bi-pencil"></i> Editar
+      </a>
+    {% endif %}
+
+    {% if cuenta.estado == 'pendiente' and current_user.puede_editar %}
+      <form method="post" action="{{ url_for('cuentas_cobro.marcar', id=cuenta.id, estado='pagada') }}" class="d-inline">
+        <button class="btn btn-primary" onclick="return confirm('¿Marcar como pagada?');">
+          <i class="bi bi-check-circle"></i> Marcar pagada
+        </button>
+      </form>
+    {% endif %}
+    {% if cuenta.estado == 'pagada' and current_user.puede_editar %}
+      <form method="post" action="{{ url_for('cuentas_cobro.marcar', id=cuenta.id, estado='pendiente') }}" class="d-inline">
+        <button class="btn btn-light"><i class="bi bi-arrow-counterclockwise"></i> Reabrir</button>
+      </form>
+    {% endif %}
+    {% if cuenta.estado != 'anulada' and current_user.puede_editar %}
+      <form method="post" action="{{ url_for('cuentas_cobro.marcar', id=cuenta.id, estado='anulada') }}" class="d-inline">
+        <button class="btn btn-light text-danger" onclick="return confirm('¿Anular esta cuenta?');">
+          <i class="bi bi-x-circle"></i> Anular
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-card-text"></i> Concepto</h3>
+      </div>
+      <div class="g1-card-body">
+        <p class="mb-3">{{ cuenta.concepto or '—' }}</p>
+      </div>
+      <div class="g1-card-footer g1-totales">
+        <div class="g1-totales-row g1-totales-total">
+          <span class="label">Valor total</span>
+          <span class="value">{{ cuenta.valor|moneda }}</span>
+        </div>
+      </div>
+    </div>
+
+    {% if cuenta.cotizacion %}
+    <div class="g1-card mt-3">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-link-45deg"></i> Cotización vinculada</h3>
+      </div>
+      <div class="g1-card-body">
+        <a href="{{ url_for('cotizaciones.detalle', id=cuenta.cotizacion.id) }}" class="g1-link-strong">
+          {{ cuenta.cotizacion.numero }}
+        </a>
+        <span class="text-muted ms-2">{{ cuenta.cotizacion.fecha|fecha_es }} · {{ cuenta.cotizacion.total|moneda }}</span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-person-vcard"></i> Cliente</h3>
+      </div>
+      <div class="g1-card-body">
+        <dl class="g1-dl">
+          <dt>Nombre</dt><dd><a href="{{ url_for('clientes.detalle', id=cuenta.cliente.id) }}">{{ cuenta.cliente.nombre }}</a></dd>
+          <dt>NIT</dt><dd>{{ cuenta.cliente.nit or '—' }}</dd>
+          <dt>Correo</dt><dd>{{ cuenta.cliente.correo or '—' }}</dd>
+          <dt>Teléfono</dt><dd>{{ cuenta.cliente.telefono or '—' }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    {% if current_user.puede_editar %}
+    <div class="g1-card mt-3">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-envelope-arrow-up"></i> Enviar por correo</h3>
+      </div>
+      <div class="g1-card-body">
+        <form method="post" action="{{ url_for('cuentas_cobro.enviar', id=cuenta.id) }}">
+          <label class="form-label">Destinatario</label>
+          <input type="email" name="destinatario" class="form-control"
+                 value="{{ cuenta.cliente.correo or '' }}" required>
+          <button class="btn btn-primary w-100 mt-3">
+            <i class="bi bi-send"></i> Enviar cuenta
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if plantillas %}
+    <div class="g1-card mt-3">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-palette"></i> Plantilla PDF</h3>
+      </div>
+      <div class="g1-card-body">
+        <div class="d-grid gap-2">
+          {% for pl in plantillas %}
+            <a href="{{ url_for('cuentas_cobro.pdf', id=cuenta.id, plantilla_id=pl.id) }}"
+               target="_blank" class="btn btn-light text-start">
+              <i class="bi bi-file-earmark-pdf"></i> {{ pl.nombre }}
+              {% if pl.es_predeterminada %}<span class="g1-badge g1-badge-success ms-1">Default</span>{% endif %}
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="g1-card mt-3">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-info-circle"></i> Información</h3>
+      </div>
+      <div class="g1-card-body">
+        <dl class="g1-dl">
+          <dt>Creada</dt><dd>{{ cuenta.creada_en|fecha_es }}</dd>
+          {% if cuenta.fecha_pago %}
+            <dt>Fecha de pago</dt><dd>{{ cuenta.fecha_pago|fecha_es }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+
+    {% if current_user.es_admin %}
+    <div class="g1-card mt-3 border-danger-subtle">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title text-danger"><i class="bi bi-exclamation-triangle"></i> Zona peligrosa</h3>
+      </div>
+      <div class="g1-card-body">
+        <form method="post" action="{{ url_for('cuentas_cobro.eliminar', id=cuenta.id) }}"
+              onsubmit="return confirm('¿Eliminar definitivamente esta cuenta de cobro?');">
+          <button class="btn btn-light text-danger w-100">
+            <i class="bi bi-trash"></i> Eliminar cuenta de cobro
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

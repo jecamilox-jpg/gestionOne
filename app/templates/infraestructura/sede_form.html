@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block titulo %}{% if sede %}Editar sede{% else %}Nueva sede{% endif %}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb">
+      <a href="{{ url_for('clientes.lista') }}">Clientes</a> /
+      <a href="{{ url_for('clientes.detalle', id=cliente.id) }}">{{ cliente.nombre }}</a> /
+      <a href="{{ url_for('infraestructura.hub', cliente_id=cliente.id) }}">Infraestructura</a> /
+      <span>{% if sede %}{{ sede.nombre }}{% else %}Nueva sede{% endif %}</span>
+    </nav>
+    <h1 class="g1-page-title">
+      <i class="bi bi-building"></i>
+      {% if sede %}Editar sede{% else %}Nueva sede{% endif %}
+    </h1>
+  </div>
+</div>
+
+<form method="post" class="g1-form">
+  <div class="g1-card">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-geo-alt"></i> Datos de la sede</h3>
+    </div>
+    <div class="g1-card-body">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label required">Nombre de la sede</label>
+          <input type="text" name="nombre" class="form-control" required autofocus
+                 placeholder="Ej: Oficina Principal, Sucursal Norte..."
+                 value="{{ sede.nombre if sede else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Ciudad</label>
+          <input type="text" name="ciudad" class="form-control"
+                 value="{{ sede.ciudad if sede else '' }}">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Dirección</label>
+          <input type="text" name="direccion" class="form-control"
+                 value="{{ sede.direccion if sede else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Teléfono</label>
+          <input type="text" name="telefono" class="form-control"
+                 value="{{ sede.telefono if sede else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Responsable / Contacto en sede</label>
+          <input type="text" name="responsable" class="form-control"
+                 placeholder="Nombre del encargado"
+                 value="{{ sede.responsable if sede else '' }}">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Notas</label>
+          <textarea name="notas" rows="3" class="form-control"
+                    placeholder="Observaciones, horarios, restricciones de acceso, etc.">{{ sede.notas if sede else '' }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-form-actions">
+    <a href="{{ url_for('infraestructura.hub', cliente_id=cliente.id) }}"
+       class="btn btn-light">Cancelar</a>
+    {% if sede %}
+      <form method="post"
+            action="{{ url_for('infraestructura.sede_eliminar', cliente_id=cliente.id, sede_id=sede.id) }}"
+            onsubmit="return confirm('¿Eliminar la sede {{ sede.nombre|e }}? Se borrarán también todos sus equipos.');"
+            class="d-inline">
+        <button class="btn btn-light text-danger">
+          <i class="bi bi-trash"></i> Eliminar sede
+        </button>
+      </form>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-lg"></i>
+      {% if sede %}Guardar cambios{% else %}Crear sede{% endif %}
+    </button>
+  </div>
+</form>
+{% endblock %}

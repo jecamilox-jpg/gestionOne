@@ -1,0 +1,61 @@
+{# Sidebar de navegación #}
+<aside class="g1-sidebar" id="g1-sidebar">
+  <div class="g1-sidebar-brand">
+    <div class="logo-mark">G1</div>
+    <span class="brand-text">GestiónOne</span>
+  </div>
+
+  <nav class="g1-sidebar-nav">
+    <div class="g1-nav-section">General</div>
+    <a href="{{ url_for('dashboard.index') }}"
+       class="g1-nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+      <i class="bi bi-grid-1x2-fill"></i> <span class="label">Dashboard</span>
+    </a>
+
+    <div class="g1-nav-section">Operación</div>
+    <a href="{{ url_for('clientes.lista') }}"
+       class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('clientes.') %}active{% endif %}">
+      <i class="bi bi-people-fill"></i> <span class="label">Clientes</span>
+    </a>
+    <a href="{{ url_for('productos.lista') }}"
+       class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('productos.') %}active{% endif %}">
+      <i class="bi bi-box-seam-fill"></i> <span class="label">Productos</span>
+    </a>
+    <a href="{{ url_for('cotizaciones.lista') }}"
+       class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('cotizaciones.') %}active{% endif %}">
+      <i class="bi bi-file-earmark-text-fill"></i> <span class="label">Cotizaciones</span>
+    </a>
+    <a href="{{ url_for('cuentas_cobro.lista') }}"
+       class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('cuentas_cobro.') %}active{% endif %}">
+      <i class="bi bi-receipt-cutoff"></i> <span class="label">Cuentas de Cobro</span>
+    </a>
+
+    <div class="g1-nav-section">Personalización</div>
+    <a href="{{ url_for('layouts.lista') }}"
+       class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('layouts.') %}active{% endif %}">
+      <i class="bi bi-palette-fill"></i> <span class="label">Plantillas</span>
+    </a>
+
+    {% if current_user.is_authenticated and current_user.es_admin %}
+      <div class="g1-nav-section">Administración</div>
+      <a href="{{ url_for('empresas.lista') }}"
+         class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('empresas.') %}active{% endif %}">
+        <i class="bi bi-building-fill"></i> <span class="label">Empresas</span>
+      </a>
+      <a href="{{ url_for('usuarios.lista') }}"
+         class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('usuarios.') %}active{% endif %}">
+        <i class="bi bi-person-badge-fill"></i> <span class="label">Usuarios</span>
+      </a>
+      <a href="{{ url_for('auditoria.lista') }}"
+         class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('auditoria.') %}active{% endif %}">
+        <i class="bi bi-shield-check"></i> <span class="label">Auditoría</span>
+      </a>
+    {% endif %}
+  </nav>
+
+  <div class="g1-sidebar-footer">
+    <div class="d-flex align-items-center justify-content-between">
+      <span class="brand-text">v1.0.0</span>
+    </div>
+  </div>
+</aside>

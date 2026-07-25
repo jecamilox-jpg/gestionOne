@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cotización {{ cotizacion.numero }}</title>
+  <style>
+    @page { size: A4; margin: 1.2cm 1.3cm; }
+    * { box-sizing: border-box; }
+    body { font-family: Helvetica, Arial, sans-serif; color: #2b2f38; font-size: 11px; line-height: 1.45; margin: 0; }
+    h1, h2, h3 { margin: 0; }
+    .pdf-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #635bff; padding-bottom: 12px; margin-bottom: 18px; }
+    .pdf-empresa { font-size: 16px; font-weight: 700; color: #635bff; }
+    .pdf-empresa-info { color: #555; font-size: 10px; margin-top: 4px; line-height: 1.5; }
+    .pdf-doc-info { text-align: right; }
+    .pdf-doc-info .titulo { font-size: 22px; font-weight: 800; color: #1a1f2e; letter-spacing: .5px; }
+    .pdf-doc-info .numero { font-size: 13px; font-weight: 700; color: #635bff; margin-top: 2px; }
+    .pdf-doc-info .fecha { color: #666; margin-top: 4px; font-size: 10px; }
+
+    .pdf-cliente { display: flex; gap: 14px; margin-bottom: 14px; }
+    .pdf-box { flex: 1; border: 1px solid #e4e6ec; border-radius: 6px; padding: 10px 12px; }
+    .pdf-box .label { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: #777; font-weight: 600; margin-bottom: 5px; }
+    .pdf-box .valor { font-size: 11px; }
+    .pdf-box .valor strong { display: block; font-size: 12px; color: #1a1f2e; }
+
+    .pdf-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    .pdf-table th { background: #635bff; color: white; padding: 8px 10px; text-align: left; font-size: 10px; font-weight: 600; }
+    .pdf-table th:last-child, .pdf-table th.num { text-align: right; }
+    .pdf-table td { padding: 8px 10px; border-bottom: 1px solid #ebedf2; }
+    .pdf-table td.num { text-align: right; }
+    .pdf-table tbody tr:nth-child(even) td { background: #fafbfd; }
+    .pdf-table .descripcion { font-weight: 600; color: #1a1f2e; }
+    .pdf-table .descripcion .extra { font-weight: normal; color: #777; font-size: 10px; }
+
+    .pdf-totales { margin-top: 14px; display: flex; justify-content: flex-end; }
+    .pdf-totales-box { min-width: 280px; border: 1px solid #e4e6ec; border-radius: 6px; overflow: hidden; }
+    .pdf-totales-row { display: flex; justify-content: space-between; padding: 7px 12px; font-size: 11px; }
+    .pdf-totales-row.total { background: #635bff; color: white; font-weight: 700; font-size: 13px; padding: 10px 12px; }
+
+    .pdf-observaciones { margin-top: 18px; border-left: 3px solid #635bff; padding: 8px 12px; background: #f7f8fa; font-size: 10px; }
+    .pdf-observaciones .label { font-weight: 700; color: #635bff; display: block; margin-bottom: 3px; }
+
+    .pdf-footer { position: fixed; bottom: 0.4cm; left: 1.3cm; right: 1.3cm; text-align: center; font-size: 9px; color: #999; border-top: 1px solid #eee; padding-top: 6px; }
+  </style>
+</head>
+<body>
+
+  <div class="pdf-header">
+    <div>
+      <div class="pdf-empresa">{{ cotizacion.empresa.nombre }}</div>
+      <div class="pdf-empresa-info">
+        {% if cotizacion.empresa.nit %}NIT: {{ cotizacion.empresa.nit }}<br>{% endif %}
+        {% if cotizacion.empresa.direccion %}{{ cotizacion.empresa.direccion }}<br>{% endif %}
+        {% if cotizacion.empresa.telefono %}Tel: {{ cotizacion.empresa.telefono }}{% endif %}
+        {% if cotizacion.empresa.correo %} · {{ cotizacion.empresa.correo }}{% endif %}
+      </div>
+    </div>
+    <div class="pdf-doc-info">
+      <div class="titulo">COTIZACIÓN</div>
+      <div class="numero">{{ cotizacion.numero }}</div>
+      <div class="fecha">Fecha: {{ cotizacion.fecha.strftime('%d/%m/%Y') }}</div>
+      <div class="fecha">Estado: <strong>{{ cotizacion.estado|upper }}</strong></div>
+    </div>
+  </div>
+
+  <div class="pdf-cliente">
+    <div class="pdf-box">
+      <div class="label">Cliente</div>
+      <div class="valor">
+        <strong>{{ cotizacion.cliente.nombre }}</strong>
+        {% if cotizacion.cliente.nit %}NIT: {{ cotizacion.cliente.nit }}<br>{% endif %}
+        {% if cotizacion.cliente.direccion %}{{ cotizacion.cliente.direccion }}{% if cotizacion.cliente.ciudad %}, {{ cotizacion.cliente.ciudad }}{% endif %}<br>{% endif %}
+        {% if cotizacion.cliente.telefono %}Tel: {{ cotizacion.cliente.telefono }}<br>{% endif %}
+        {% if cotizacion.cliente.correo %}{{ cotizacion.cliente.correo }}{% endif %}
+      </div>
+    </div>
+    <div class="pdf-box">
+      <div class="label">Detalles del documento</div>
+      <div class="valor">
+        Número: <strong>{{ cotizacion.numero }}</strong>
+        Fecha emisión: {{ cotizacion.fecha.strftime('%d/%m/%Y') }}<br>
+        {% if cotizacion.usuario %}Elaborado por: {{ cotizacion.usuario.nombre_completo }}<br>{% endif %}
+        Estado: <strong>{{ cotizacion.estado|upper }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <table class="pdf-table">
+    <thead>
+      <tr>
+        <th>Descripción</th>
+        <th class="num">Cantidad</th>
+        <th class="num">Valor unit.</th>
+        <th class="num">IVA</th>
+        <th class="num">Subtotal</th>
+        <th class="num">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in cotizacion.detalles %}
+      <tr>
+        <td class="descripcion">
+          {{ d.descripcion }}
+          {% if d.producto %}<div class="extra">Cód: {{ d.producto.codigo }}</div>{% endif %}
+        </td>
+        <td class="num">{{ "%.2f"|format(d.cantidad) }}</td>
+        <td class="num">$ {{ "{:,.2f}".format(d.valor_unitario) }}</td>
+        <td class="num">{{ "%.1f"|format(d.iva) }}%</td>
+        <td class="num">$ {{ "{:,.2f}".format(d.subtotal) }}</td>
+        <td class="num">$ {{ "{:,.2f}".format(d.total) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="pdf-totales">
+    <div class="pdf-totales-box">
+      <div class="pdf-totales-row">
+        <span>Subtotal</span>
+        <span>$ {{ "{:,.2f}".format(cotizacion.subtotal) }}</span>
+      </div>
+      <div class="pdf-totales-row">
+        <span>IVA</span>
+        <span>$ {{ "{:,.2f}".format(cotizacion.iva_total) }}</span>
+      </div>
+      <div class="pdf-totales-row total">
+        <span>Total</span>
+        <span>$ {{ "{:,.2f}".format(cotizacion.total) }}</span>
+      </div>
+    </div>
+  </div>
+
+  {% if cotizacion.observaciones %}
+  <div class="pdf-observaciones">
+    <span class="label">Observaciones</span>
+    {{ cotizacion.observaciones }}
+  </div>
+  {% endif %}
+
+  <div class="pdf-footer">
+    Documento generado por GestiónOne · {{ cotizacion.empresa.nombre }}
+  </div>
+</body>
+</html>

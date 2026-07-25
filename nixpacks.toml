@@ -1,0 +1,32 @@
+# Configuración de Nixpacks para Railway
+# Asegura que se instalen las librerías nativas que necesita WeasyPrint
+# (Cairo, Pango, GDK-Pixbuf) además de Python 3.12.
+
+[phases.setup]
+nixPkgs = [
+  "python312",
+  "gcc",
+  "pkg-config",
+  "cairo",
+  "pango",
+  "gdk-pixbuf",
+  "glib",
+  "fontconfig",
+  "freetype",
+  "harfbuzz",
+  "libffi",
+  "shared-mime-info"
+]
+
+[phases.install]
+cmds = [
+  "python -m venv /opt/venv",
+  ". /opt/venv/bin/activate && pip install --upgrade pip",
+  ". /opt/venv/bin/activate && pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = ["echo 'Build complete'"]
+
+[start]
+cmd = ". /opt/venv/bin/activate && gunicorn -w 2 -b 0.0.0.0:$PORT --timeout 120 wsgi:app"

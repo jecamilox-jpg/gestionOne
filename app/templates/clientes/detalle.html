@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block titulo %}{{ cliente.nombre }}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb"><a href="{{ url_for('clientes.lista') }}">Clientes</a> / <span>{{ cliente.nombre }}</span></nav>
+    <h1 class="g1-page-title">{{ cliente.nombre }}</h1>
+    <p class="g1-page-sub">
+      <span class="g1-badge {{ cliente.estado|badge_estado }}">{{ cliente.estado }}</span>
+      <span class="ms-2 text-muted">Registrado el {{ cliente.creado_en|fecha_es }}</span>
+    </p>
+  </div>
+  <div class="g1-page-actions">
+    {% if current_user.es_admin %}
+      <a href="{{ url_for('infraestructura.hub', cliente_id=cliente.id) }}" class="btn btn-light">
+        <i class="bi bi-diagram-3-fill"></i> Infraestructura
+      </a>
+    {% endif %}
+    {% if current_user.puede_editar %}
+      <a href="{{ url_for('clientes.editar', id=cliente.id) }}" class="btn btn-light">
+        <i class="bi bi-pencil"></i> Editar
+      </a>
+    {% endif %}
+    <a href="{{ url_for('cotizaciones.nueva') }}" class="btn btn-primary">
+      <i class="bi bi-file-earmark-plus"></i> Nueva cotización
+    </a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-5">
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-info-circle"></i> Datos de contacto</h3>
+      </div>
+      <div class="g1-card-body">
+        <dl class="g1-dl">
+          <dt>NIT / Documento</dt><dd>{{ cliente.nit or '—' }}</dd>
+          <dt>Dirección</dt><dd>{{ cliente.direccion or '—' }}</dd>
+          <dt>Ciudad</dt><dd>{{ cliente.ciudad or '—' }}</dd>
+          <dt>Teléfono</dt><dd>{{ cliente.telefono or '—' }}</dd>
+          <dt>Correo</dt>
+          <dd>
+            {% if cliente.correo %}
+              <a href="mailto:{{ cliente.correo }}">{{ cliente.correo }}</a>
+            {% else %}—{% endif %}
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    {# Resumen financiero #}
+    {% set ctas_todas = cliente.cuentas.all() %}
+    {% set pendientes = ctas_todas|selectattr("estado", "equalto", "pendiente")|list %}
+    {% set pagadas = ctas_todas|selectattr("estado", "equalto", "pagada")|list %}
+    {% set total_pendiente = pendientes|sum(attribute="valor") %}
+    {% set total_pagado = pagadas|sum(attribute="valor") %}
+    {% set total_general = ctas_todas|sum(attribute="valor") %}
+
+    <div class="g1-kpi-grid mb-3">
+      <div class="g1-kpi">
+        <div class="g1-kpi-icon kpi-orange"><i class="bi bi-clock-history"></i></div>
+        <div class="g1-kpi-body">
+          <span class="g1-kpi-label">Pendiente por cobrar</span>
+          <span class="g1-kpi-value">{{ total_pendiente|moneda }}</span>
+          <span class="text-muted text-small">{{ pendientes|length }} cuenta{{ 's' if pendientes|length != 1 else '' }}</span>
+        </div>
+      </div>
+      <div class="g1-kpi">
+        <div class="g1-kpi-icon kpi-green"><i class="bi bi-check-circle"></i></div>
+        <div class="g1-kpi-body">
+          <span class="g1-kpi-label">Total cobrado</span>
+          <span class="g1-kpi-value">{{ total_pagado|moneda }}</span>
+          <span class="text-muted text-small">{{ pagadas|length }} cuenta{{ 's' if pagadas|length != 1 else '' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-receipt"></i> Cuentas de cobro</h3>
+      </div>
+      <div class="g1-card-body p-0" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+        {% set ctas = cliente.cuentas.order_by(CuentaCobro.creada_en.desc()).limit(10).all() %}
+        {% if ctas %}
+          <table class="g1-table">
+            <thead><tr><th>Consecutivo</th><th>Fecha</th><th>Estado</th><th class="text-end">Valor</th></tr></thead>
+            <tbody>
+              {% for cc in ctas %}
+              <tr>
+                <td><a href="{{ url_for('cuentas_cobro.detalle', id=cc.id) }}" class="g1-link-strong">{{ cc.consecutivo }}</a></td>
+                <td>{{ cc.fecha|fecha_es }}</td>
+                <td><span class="g1-badge {{ cc.estado|badge_estado }}">{{ cc.estado }}</span></td>
+                <td class="text-end fw-semibold">{{ cc.valor|moneda }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="g1-empty py-4">
+            <i class="bi bi-receipt"></i>
+            <p>Sin cuentas de cobro registradas.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

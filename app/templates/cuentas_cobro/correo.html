@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; color: #333; line-height: 1.5; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { border-bottom: 3px solid #635bff; padding-bottom: 15px; margin-bottom: 25px; }
+    .header h1 { color: #635bff; margin: 0 0 6px; font-size: 22px; }
+    .resumen { background: #f7f8fa; border-radius: 8px; padding: 18px; margin: 20px 0; }
+    .resumen-row { display: flex; justify-content: space-between; margin: 6px 0; }
+    .resumen-row.total { border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px; font-weight: bold; font-size: 17px; color: #635bff; }
+    .footer { color: #888; font-size: 12px; text-align: center; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Cuenta de Cobro {{ cuenta.consecutivo }}</h1>
+    <p>{{ cuenta.empresa.nombre }}</p>
+  </div>
+
+  <p>Estimado(a) <strong>{{ cuenta.cliente.nombre }}</strong>,</p>
+  <p>Adjuntamos en PDF la cuenta de cobro correspondiente. A continuación encontrará el resumen:</p>
+
+  <div class="resumen">
+    <div class="resumen-row"><span>Consecutivo:</span><span>{{ cuenta.consecutivo }}</span></div>
+    <div class="resumen-row"><span>Fecha:</span><span>{{ cuenta.fecha|fecha_es }}</span></div>
+    <div class="resumen-row"><span>Concepto:</span><span>{{ (cuenta.concepto or '')|truncate(50) }}</span></div>
+    <div class="resumen-row total"><span>Total a pagar:</span><span>{{ cuenta.valor|moneda }}</span></div>
+  </div>
+
+  <p>Quedamos atentos a confirmar el pago.</p>
+
+  <p>
+    Cordialmente,<br>
+    <strong>{{ cuenta.empresa.nombre }}</strong>
+    {% if cuenta.empresa.telefono %}<br>Tel: {{ cuenta.empresa.telefono }}{% endif %}
+    {% if cuenta.empresa.correo %}<br>{{ cuenta.empresa.correo }}{% endif %}
+  </p>
+
+  <div class="footer">
+    Este es un correo automático generado por GestiónOne.
+  </div>
+</body>
+</html>

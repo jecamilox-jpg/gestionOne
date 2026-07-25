@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block titulo %}Infraestructura — {{ cliente.nombre }}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb">
+      <a href="{{ url_for('clientes.lista') }}">Clientes</a> /
+      <a href="{{ url_for('clientes.detalle', id=cliente.id) }}">{{ cliente.nombre }}</a> /
+      <span>Infraestructura</span>
+    </nav>
+    <h1 class="g1-page-title">
+      <i class="bi bi-diagram-3-fill text-primary"></i>
+      Infraestructura
+    </h1>
+    <p class="g1-page-sub">Gestión IT del cliente: sedes, equipos, documentos y notas.</p>
+  </div>
+  <div class="g1-page-actions">
+    <a href="{{ url_for('infraestructura.sede_nueva', cliente_id=cliente.id) }}"
+       class="btn btn-primary">
+      <i class="bi bi-building-add"></i> Nueva sede
+    </a>
+  </div>
+</div>
+
+{# Resumen KPI #}
+<div class="g1-kpi-grid mb-3">
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-blue"><i class="bi bi-building"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Sedes</span>
+      <span class="g1-kpi-value">{{ total_sedes }}</span>
+    </div>
+  </div>
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-violet"><i class="bi bi-hdd-network"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Equipos totales</span>
+      <span class="g1-kpi-value">{{ total_equipos }}</span>
+    </div>
+  </div>
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-green"><i class="bi bi-file-earmark-text"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Documentos</span>
+      <span class="g1-kpi-value">{{ total_documentos }}</span>
+      <a href="{{ url_for('infraestructura.documentos', cliente_id=cliente.id) }}"
+         class="g1-kpi-link">Gestionar <i class="bi bi-arrow-right-short"></i></a>
+    </div>
+  </div>
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-orange"><i class="bi bi-key-fill"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Credenciales</span>
+      <span class="g1-kpi-value">{{ total_credenciales }}</span>
+      <a href="{{ url_for('infraestructura.credenciales', cliente_id=cliente.id) }}"
+         class="g1-kpi-link">Gestionar <i class="bi bi-arrow-right-short"></i></a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  {# Columna izquierda: sedes #}
+  <div class="col-lg-8">
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-building"></i> Sedes del cliente</h3>
+        <a href="{{ url_for('infraestructura.sede_nueva', cliente_id=cliente.id) }}"
+           class="btn btn-sm btn-light"><i class="bi bi-plus"></i> Agregar</a>
+      </div>
+      <div class="g1-card-body p-0">
+        {% if sedes %}
+          <table class="g1-table">
+            <thead>
+              <tr>
+                <th>Sede</th>
+                <th>Ciudad</th>
+                <th>Responsable</th>
+                <th class="text-center">Equipos</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sede in sedes %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('infraestructura.sede_detalle', cliente_id=cliente.id, sede_id=sede.id) }}"
+                     class="g1-link-strong">
+                    {{ sede.nombre }}
+                  </a>
+                  {% if sede.direccion %}
+                    <div class="text-muted text-small">{{ sede.direccion }}</div>
+                  {% endif %}
+                </td>
+                <td>{{ sede.ciudad or '—' }}</td>
+                <td>{{ sede.responsable or '—' }}</td>
+                <td class="text-center">
+                  <span class="g1-badge g1-badge-info">{{ sede.total_equipos }}</span>
+                </td>
+                <td class="text-end">
+                  <a href="{{ url_for('infraestructura.sede_detalle', cliente_id=cliente.id, sede_id=sede.id) }}"
+                     class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
+                  <a href="{{ url_for('infraestructura.sede_editar', cliente_id=cliente.id, sede_id=sede.id) }}"
+                     class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="g1-empty">
+            <i class="bi bi-building"></i>
+            <p>Aún no has registrado sedes para este cliente.</p>
+            <a href="{{ url_for('infraestructura.sede_nueva', cliente_id=cliente.id) }}"
+               class="btn btn-primary">Crear primera sede</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Distribución de equipos por tipo #}
+    {% if equipos_por_tipo %}
+    <div class="g1-card mt-3">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-pie-chart"></i> Equipos por categoría</h3>
+      </div>
+      <div class="g1-card-body">
+        <div class="g1-tipos-grid">
+          {% set labels = {
+            'internet': 'Internet', 'firewall': 'Firewall', 'router': 'Router',
+            'switch': 'Switch', 'ap': 'Access Point', 'servidor': 'Servidor',
+            'nas': 'NAS', 'pc': 'PC', 'portatil': 'Portátil', 'impresora': 'Impresora',
+            'camara_ip': 'Cámara IP', 'telefono_ip': 'Teléfono IP', 'ups': 'UPS', 'otro': 'Otro'
+          } %}
+          {% set iconos = {
+            'internet': 'bi-globe2', 'firewall': 'bi-shield-lock-fill', 'router': 'bi-router-fill',
+            'switch': 'bi-hdd-network-fill', 'ap': 'bi-wifi', 'servidor': 'bi-server',
+            'nas': 'bi-hdd-stack-fill', 'pc': 'bi-pc-display', 'portatil': 'bi-laptop',
+            'impresora': 'bi-printer-fill', 'camara_ip': 'bi-camera-video-fill',
+            'telefono_ip': 'bi-telephone-fill', 'ups': 'bi-battery-charging', 'otro': 'bi-box'
+          } %}
+          {% for tipo, count in equipos_por_tipo.items() %}
+            <div class="g1-tipo-chip">
+              <i class="bi {{ iconos.get(tipo, 'bi-box') }}"></i>
+              <span class="g1-tipo-chip-label">{{ labels.get(tipo, tipo) }}</span>
+              <span class="g1-tipo-chip-count">{{ count }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {# Columna derecha: notas + documentos recientes #}
+  <div class="col-lg-4">
+    {# Notas rápidas #}
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-sticky-fill text-warning"></i> Notas rápidas</h3>
+      </div>
+      <div class="g1-card-body">
+        <form method="post"
+              action="{{ url_for('infraestructura.nota_crear', cliente_id=cliente.id) }}"
+              class="mb-3">
+          <textarea name="contenido" rows="3" class="form-control mb-2" required
+                    placeholder="Escribe una nota rápida sobre este cliente..."></textarea>
+          <button class="btn btn-primary btn-sm w-100">
+            <i class="bi bi-plus-lg"></i> Agregar nota
+          </button>
+        </form>
+
+        <div class="g1-notas-list">
+          {% for nota in notas %}
+          <div class="g1-nota-item">
+            <div class="g1-nota-content">{{ nota.contenido }}</div>
+            <div class="g1-nota-meta">
+              <span class="text-muted text-small">
+                <i class="bi bi-clock"></i> {{ nota.creada_en.strftime('%d/%m/%Y %H:%M') }}
+                {% if nota.autor %} · {{ nota.autor.nombre_completo }}{% endif %}
+              </span>
+              <form method="post"
+                    action="{{ url_for('infraestructura.nota_eliminar', cliente_id=cliente.id, nota_id=nota.id) }}"
+                    onsubmit="return confirm('¿Eliminar esta nota?');" class="d-inline">
+                <button class="btn btn-sm btn-link text-danger p-0">
+                  <i class="bi bi-x"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+          {% else %}
+          <p class="text-muted text-small text-center mb-0">Sin notas aún.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    {# Documentos recientes #}
+    <div class="g1-card mt-3">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-folder-fill"></i> Documentos recientes</h3>
+        <a href="{{ url_for('infraestructura.documentos', cliente_id=cliente.id) }}"
+           class="text-small">Ver todos <i class="bi bi-arrow-right-short"></i></a>
+      </div>
+      <div class="g1-card-body p-0">
+        {% if documentos %}
+          <ul class="g1-doc-list">
+            {% for doc in documentos %}
+            <li>
+              <i class="bi {{ 'bi-file-earmark-pdf-fill text-danger' if doc.es_pdf else ('bi-file-earmark-image-fill text-info' if doc.es_imagen else 'bi-file-earmark') }}"></i>
+              <div class="flex-grow-1">
+                <a href="{{ url_for('infraestructura.documento_descargar', cliente_id=cliente.id, doc_id=doc.id) }}"
+                   class="g1-link-strong">{{ doc.nombre }}</a>
+                <div class="text-muted text-small">{{ doc.tamanio_legible }} · {{ doc.creado_en.strftime('%d/%m/%Y') }}</div>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted text-small text-center p-3 mb-0">Sin documentos subidos.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

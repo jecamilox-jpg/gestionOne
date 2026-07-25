@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% block titulo %}Dashboard{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <h1 class="g1-page-title">Hola, {{ current_user.nombre_completo.split(' ')[0] }} 👋</h1>
+    <p class="g1-page-sub">Resumen de la actividad de <strong>{{ current_user.empresa.nombre if current_user.empresa else '' }}</strong>.</p>
+  </div>
+  <div class="g1-page-actions">
+    <a href="{{ url_for('cotizaciones.nueva') }}" class="btn btn-primary">
+      <i class="bi bi-file-earmark-plus"></i> Nueva cotización
+    </a>
+  </div>
+</div>
+
+{# KPIs #}
+<div class="g1-kpi-grid">
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-blue"><i class="bi bi-people-fill"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Clientes</span>
+      <span class="g1-kpi-value">{{ total_clientes }}</span>
+      <a href="{{ url_for('clientes.lista') }}" class="g1-kpi-link">Ver listado <i class="bi bi-arrow-right-short"></i></a>
+    </div>
+  </div>
+
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-violet"><i class="bi bi-box-seam-fill"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Productos</span>
+      <span class="g1-kpi-value">{{ total_productos }}</span>
+      <a href="{{ url_for('productos.lista') }}" class="g1-kpi-link">Ver catálogo <i class="bi bi-arrow-right-short"></i></a>
+    </div>
+  </div>
+
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-green"><i class="bi bi-file-earmark-text-fill"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Cotizaciones del mes</span>
+      <span class="g1-kpi-value">{{ cotizaciones_mes }}</span>
+      <a href="{{ url_for('cotizaciones.lista') }}" class="g1-kpi-link">Ver todas <i class="bi bi-arrow-right-short"></i></a>
+    </div>
+  </div>
+
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-orange"><i class="bi bi-receipt-cutoff"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Cuentas pendientes</span>
+      <span class="g1-kpi-value">{{ cuentas_pendientes }}</span>
+      <a href="{{ url_for('cuentas_cobro.lista', estado='pendiente') }}" class="g1-kpi-link">Ver pendientes <i class="bi bi-arrow-right-short"></i></a>
+    </div>
+  </div>
+</div>
+
+{# Resumen financiero #}
+<div class="row g-3 mt-1">
+  <div class="col-md-6">
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-cash-coin text-success"></i> Cartera por cobrar</h3>
+      </div>
+      <div class="g1-card-body">
+        <div class="g1-amount-block">
+          <span class="g1-amount-label">Valor pendiente</span>
+          <span class="g1-amount-value">{{ valor_pendiente|moneda }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-check2-circle text-primary"></i> Pagado este mes</h3>
+      </div>
+      <div class="g1-card-body">
+        <div class="g1-amount-block">
+          <span class="g1-amount-label">Total recaudado</span>
+          <span class="g1-amount-value">{{ valor_pagado_mes|moneda }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Gráficas #}
+<div class="row g-3 mt-1">
+  <div class="col-lg-8">
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-graph-up-arrow"></i> Ventas mensuales</h3>
+        <span class="text-muted text-small">Últimos 6 meses</span>
+      </div>
+      <div class="g1-card-body">
+        <canvas id="grafica-ventas" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="g1-card h-100">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-pie-chart-fill"></i> Estado de cartera</h3>
+      </div>
+      <div class="g1-card-body d-flex justify-content-center align-items-center">
+        <canvas id="grafica-cartera" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Últimas cotizaciones #}
+<div class="g1-card mt-3">
+  <div class="g1-card-header">
+    <h3 class="g1-card-title"><i class="bi bi-clock-history"></i> Últimas cotizaciones</h3>
+    <a href="{{ url_for('cotizaciones.lista') }}" class="text-small">Ver todas <i class="bi bi-arrow-right-short"></i></a>
+  </div>
+  <div class="g1-card-body p-0">
+    {% if ultimas_cotizaciones %}
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table class="g1-table" style="min-width:580px">
+        <thead>
+          <tr>
+            <th>Número</th>
+            <th>Cliente</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th class="text-end">Total</th>
+            <th class="text-end">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in ultimas_cotizaciones %}
+          <tr>
+            <td><span class="fw-semibold">{{ c.numero }}</span></td>
+            <td>{{ c.cliente.nombre }}</td>
+            <td>{{ c.fecha|fecha_es }}</td>
+            <td><span class="g1-badge {{ c.estado|badge_estado }}">{{ c.estado }}</span></td>
+            <td class="text-end fw-semibold">{{ c.total|moneda }}</td>
+            <td class="text-end">
+              <a href="{{ url_for('cotizaciones.detalle', id=c.id) }}" class="btn btn-sm btn-light">
+                <i class="bi bi-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    {% else %}
+      <div class="g1-empty">
+        <i class="bi bi-inbox"></i>
+        <p>Aún no tienes cotizaciones registradas.</p>
+        <a href="{{ url_for('cotizaciones.nueva') }}" class="btn btn-primary">Crear la primera</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  const etiquetas = {{ etiquetas_meses|tojson }};
+  const montos = {{ montos_meses|tojson }};
+
+  // Gradiente para el gráfico de líneas
+  const ctxLine = document.getElementById('grafica-ventas');
+  if (ctxLine) {
+    const ctx = ctxLine.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(99, 91, 255, 0.25)');
+    gradient.addColorStop(1, 'rgba(99, 91, 255, 0.0)');
+
+    new Chart(ctxLine, {
+      type: 'line',
+      data: {
+        labels: etiquetas,
+        datasets: [{
+          label: 'Ventas',
+          data: montos,
+          borderColor: '#635bff',
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#635bff',
+          borderWidth: 2.5
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (c) => '$ ' + c.parsed.y.toLocaleString('es-CO')
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: (v) => '$ ' + v.toLocaleString('es-CO') },
+            grid: { color: 'rgba(0,0,0,0.04)' }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  // Dona de cartera
+  const estados = {{ estados_cartera|tojson }};
+  const labels = [];
+  const values = [];
+  const colors = { pendiente: '#f59e0b', pagada: '#10b981', anulada: '#ef4444' };
+  const bg = [];
+  Object.keys(estados).forEach(k => {
+    labels.push(k.charAt(0).toUpperCase() + k.slice(1));
+    values.push(estados[k]);
+    bg.push(colors[k] || '#94a3b8');
+  });
+
+  const ctxDonut = document.getElementById('grafica-cartera');
+  if (ctxDonut && values.length) {
+    new Chart(ctxDonut, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: bg,
+          borderWidth: 2,
+          borderColor: '#ffffff',
+          hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '65%',
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 14, font: { size: 12 } } }
+        }
+      }
+    });
+  } else if (ctxDonut) {
+    ctxDonut.parentElement.innerHTML = '<div class="g1-empty p-4"><i class="bi bi-pie-chart"></i><p>Sin datos suficientes</p></div>';
+  }
+})();
+</script>
+{% endblock %}

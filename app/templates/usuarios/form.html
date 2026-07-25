@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block titulo %}{% if usuario %}Editar usuario{% else %}Nuevo usuario{% endif %}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb"><a href="{{ url_for('usuarios.lista') }}">Usuarios</a> / <span>{% if usuario %}{{ usuario.username }}{% else %}Nuevo{% endif %}</span></nav>
+    <h1 class="g1-page-title">{% if usuario %}Editar usuario{% else %}Nuevo usuario{% endif %}</h1>
+  </div>
+</div>
+
+<form method="post" class="g1-form">
+  <div class="g1-card">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-person-badge"></i> Datos del usuario</h3>
+    </div>
+    <div class="g1-card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label required">Nombre de usuario</label>
+          <input type="text" name="username" class="form-control" required
+                 value="{{ usuario.username if usuario else '' }}"
+                 {% if usuario %}readonly{% endif %} autofocus>
+          {% if usuario %}<div class="text-muted text-small mt-1">El usuario no puede modificarse.</div>{% endif %}
+        </div>
+        <div class="col-md-8">
+          <label class="form-label required">Nombre completo</label>
+          <input type="text" name="nombre_completo" class="form-control" required
+                 value="{{ usuario.nombre_completo if usuario else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label required">Correo electrónico</label>
+          <input type="email" name="correo" class="form-control" required
+                 value="{{ usuario.correo if usuario else '' }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label required">Rol</label>
+          <select name="rol" class="form-select" required>
+            <option value="administrador" {% if usuario and usuario.rol == 'administrador' %}selected{% endif %}>Administrador</option>
+            <option value="vendedor" {% if usuario and usuario.rol == 'vendedor' %}selected{% elif not usuario %}selected{% endif %}>Vendedor</option>
+            <option value="consulta" {% if usuario and usuario.rol == 'consulta' %}selected{% endif %}>Consulta</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label required">Empresa</label>
+          <select name="empresa_id" class="form-select" required>
+            {% for e in empresas %}
+              <option value="{{ e.id }}"
+                {% if usuario and usuario.empresa_id == e.id %}selected{% endif %}>
+                {{ e.nombre }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label {% if not usuario %}required{% endif %}">
+            {% if usuario %}Nueva contraseña (opcional){% else %}Contraseña{% endif %}
+          </label>
+          <input type="password" name="password" class="form-control"
+                 {% if not usuario %}required{% endif %}
+                 placeholder="{% if usuario %}Dejar en blanco para no cambiar{% else %}Mínimo 6 caracteres{% endif %}">
+        </div>
+
+        <div class="col-md-6 d-flex align-items-end">
+          <div class="form-check form-switch">
+            <input type="checkbox" name="activo" id="activo" class="form-check-input" value="1"
+                   {% if not usuario or usuario.activo %}checked{% endif %}>
+            <label for="activo" class="form-check-label">Usuario activo</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-info mt-3 mb-0">
+        <i class="bi bi-info-circle"></i>
+        <div class="ms-2">
+          <strong>Roles:</strong>
+          <span class="ms-2"><strong>Administrador</strong>: acceso total.</span>
+          <span class="ms-2"><strong>Vendedor</strong>: gestiona clientes, productos, cotizaciones y cuentas.</span>
+          <span class="ms-2"><strong>Consulta</strong>: solo lectura.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-form-actions">
+    <a href="{{ url_for('usuarios.lista') }}" class="btn btn-light">Cancelar</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-lg"></i> {% if usuario %}Guardar cambios{% else %}Crear usuario{% endif %}
+    </button>
+  </div>
+</form>
+{% endblock %}

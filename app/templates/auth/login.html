@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block titulo %}Iniciar sesión{% endblock %}
+
+{# Sobrescribimos el contenido raíz para no mostrar sidebar/topbar #}
+{% block contenido_raiz %}
+<div class="g1-login-shell g1-login-shell--single">
+
+  <div class="g1-login-card">
+    <div class="inner">
+      <div class="brand-mini">
+        <div class="logo-mark">G1</div>
+        <span>GestiónOne</span>
+      </div>
+
+      <h1>Bienvenido</h1>
+      <p class="subtitle">Inicia sesión para continuar con tu cuenta.</p>
+
+      {# Flashes #}
+      <div class="mb-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for cat, msg in messages %}
+            <div class="alert alert-{{ cat if cat in ['success','danger','warning','info'] else 'info' }}">
+              {{ msg }}
+            </div>
+          {% endfor %}
+        {% endwith %}
+      </div>
+
+      <form method="POST" novalidate>
+        <div class="mb-3">
+          <label class="form-label">Usuario o correo</label>
+          <input type="text" name="username" class="form-control"
+                 placeholder="Ingresa tu usuario" required autofocus
+                 autocomplete="username">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label d-flex justify-content-between">
+            <span>Contraseña</span>
+            <a href="{{ url_for('auth.recuperar_password') }}" class="text-small text-muted">¿Olvidaste tu clave?</a>
+          </label>
+          <input type="password" name="password" class="form-control"
+                 placeholder="••••••••" required
+                 autocomplete="current-password">
+        </div>
+
+        <div class="mb-4 d-flex align-items-center">
+          <input type="checkbox" name="recordar" id="recordar" class="form-check-input me-2">
+          <label for="recordar" class="form-check-label text-small text-muted">Recordarme en este equipo</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100" style="justify-content: center; padding: 10px;">
+          Iniciar sesión <i class="bi bi-arrow-right ms-1"></i>
+        </button>
+      </form>
+
+      <div class="text-small text-center mt-4" style="opacity: 0.5;">
+        © {{ 2025 }} GestiónOne
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

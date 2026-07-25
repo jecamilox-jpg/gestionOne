@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block titulo %}{% if equipo %}Editar equipo{% else %}Nuevo equipo{% endif %}{% endblock %}
+
+{% block contenido %}
+{% set tipo_labels = {
+  'internet': 'Internet (WAN/ISP)', 'firewall': 'Firewall', 'router': 'Router',
+  'switch': 'Switch', 'ap': 'Access Point', 'servidor': 'Servidor',
+  'nas': 'NAS / Storage', 'pc': 'PC de escritorio', 'portatil': 'Portátil',
+  'impresora': 'Impresora', 'camara_ip': 'Cámara IP', 'telefono_ip': 'Teléfono IP',
+  'ups': 'UPS', 'otro': 'Otro'
+} %}
+
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb">
+      <a href="{{ url_for('clientes.lista') }}">Clientes</a> /
+      <a href="{{ url_for('clientes.detalle', id=sede.cliente_id) }}">{{ sede.cliente.nombre }}</a> /
+      <a href="{{ url_for('infraestructura.hub', cliente_id=sede.cliente_id) }}">Infraestructura</a> /
+      <a href="{{ url_for('infraestructura.sede_detalle', cliente_id=sede.cliente_id, sede_id=sede.id) }}">{{ sede.nombre }}</a> /
+      <span>{% if equipo %}{{ equipo.nombre }}{% else %}Nuevo equipo{% endif %}</span>
+    </nav>
+    <h1 class="g1-page-title">
+      <i class="bi bi-hdd-network"></i>
+      {% if equipo %}Editar equipo{% else %}Nuevo equipo{% endif %}
+    </h1>
+  </div>
+</div>
+
+<form method="post" class="g1-form">
+  <div class="g1-card">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-info-circle"></i> Datos generales</h3>
+    </div>
+    <div class="g1-card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label required">Tipo</label>
+          <select name="tipo" class="form-select" required>
+            {% for t in tipos %}
+              <option value="{{ t }}" {% if equipo and equipo.tipo == t %}selected{% endif %}>
+                {{ tipo_labels.get(t, t) }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label required">Nombre / Etiqueta</label>
+          <input type="text" name="nombre" class="form-control" required autofocus
+                 placeholder="Ej: SW-PISO-2, Router principal, PC-Recepción..."
+                 value="{{ equipo.nombre if equipo else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Marca</label>
+          <input type="text" name="marca" class="form-control"
+                 placeholder="Cisco, TP-Link, HP, Dell..."
+                 value="{{ equipo.marca if equipo else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Modelo</label>
+          <input type="text" name="modelo" class="form-control"
+                 value="{{ equipo.modelo if equipo else '' }}">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Dirección IP</label>
+          <input type="text" name="ip" class="form-control"
+                 placeholder="192.168.1.1"
+                 value="{{ equipo.ip if equipo else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Dirección MAC</label>
+          <input type="text" name="mac" class="form-control"
+                 placeholder="00:1A:2B:3C:4D:5E"
+                 value="{{ equipo.mac if equipo else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Sistema operativo</label>
+          <input type="text" name="sistema_operativo" class="form-control"
+                 placeholder="Windows 11, Ubuntu 22.04..."
+                 value="{{ equipo.sistema_operativo if equipo else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Ubicación física</label>
+          <input type="text" name="ubicacion_fisica" class="form-control"
+                 placeholder="Rack 2, Piso 3, Oficina 305..."
+                 value="{{ equipo.ubicacion_fisica if equipo else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Serial</label>
+          <input type="text" name="serial" class="form-control"
+                 value="{{ equipo.serial if equipo else '' }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Instalación</label>
+          <input type="date" name="fecha_instalacion" class="form-control"
+                 value="{{ equipo.fecha_instalacion.isoformat() if equipo and equipo.fecha_instalacion else '' }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-card mt-3">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-diagram-3"></i> Topología de red</h3>
+    </div>
+    <div class="g1-card-body">
+      <label class="form-label">Conectado a (equipo padre en la red)</label>
+      <select name="padre_id" class="form-select">
+        <option value="">— Ninguno (es punto de entrada o aislado) —</option>
+        {% for p in posibles_padres %}
+          <option value="{{ p.id }}"
+                  {% if equipo and equipo.padre_id == p.id %}selected{% endif %}>
+            {{ tipo_labels.get(p.tipo, p.tipo) }} — {{ p.nombre }}
+          </option>
+        {% endfor %}
+      </select>
+      <div class="form-text">
+        Define el "padre" en la jerarquía de red (ej: una PC se conecta a un Switch).
+        Esto se usará para generar el diagrama de la red.
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-card mt-3">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-card-text"></i> Observaciones</h3>
+    </div>
+    <div class="g1-card-body">
+      <textarea name="observaciones" rows="3" class="form-control"
+                placeholder="Notas técnicas, configuración especial, problemas conocidos...">{{ equipo.observaciones if equipo else '' }}</textarea>
+    </div>
+  </div>
+
+  <div class="g1-form-actions">
+    <a href="{{ url_for('infraestructura.sede_detalle', cliente_id=sede.cliente_id, sede_id=sede.id) }}"
+       class="btn btn-light">Cancelar</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-lg"></i>
+      {% if equipo %}Guardar cambios{% else %}Crear equipo{% endif %}
+    </button>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block titulo %}Plantillas de documentos{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <h1 class="g1-page-title">Plantillas de documentos</h1>
+    <p class="g1-page-sub">Diseña plantillas personalizadas para tus cotizaciones y cuentas de cobro.</p>
+  </div>
+  <div class="g1-page-actions">
+    {% if current_user.puede_editar %}
+      <a href="{{ url_for('layouts.nuevo') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nueva plantilla
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+{% if plantillas %}
+  <div class="row g-3">
+    {% for pl in plantillas %}
+    <div class="col-md-6 col-lg-4">
+      <div class="g1-plantilla-card">
+        <div class="g1-plantilla-thumb">
+          <i class="bi {% if pl.tipo == 'cotizacion' %}bi-file-earmark-text{% else %}bi-receipt{% endif %}"></i>
+        </div>
+        <div class="g1-plantilla-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <h3 class="g1-plantilla-title">{{ pl.nombre }}</h3>
+            {% if pl.es_predeterminada %}
+              <span class="g1-badge g1-badge-success" title="Predeterminada">
+                <i class="bi bi-star-fill"></i> Default
+              </span>
+            {% endif %}
+          </div>
+          <span class="g1-badge g1-badge-secondary">
+            {% if pl.tipo == 'cotizacion' %}Cotización{% else %}Cuenta de cobro{% endif %}
+          </span>
+          <p class="text-muted text-small mt-2 mb-3">
+            Actualizada {{ pl.actualizada_en|fecha_es }}
+          </p>
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('layouts.editor', id=pl.id) }}" class="btn btn-sm btn-primary">
+              <i class="bi bi-pencil-square"></i> Editar
+            </a>
+            {% if current_user.es_admin and not pl.es_predeterminada %}
+              <form method="post" action="{{ url_for('layouts.hacer_predeterminada', id=pl.id) }}" class="d-inline">
+                <button class="btn btn-sm btn-light"><i class="bi bi-star"></i> Predeterminada</button>
+              </form>
+            {% endif %}
+            {% if current_user.es_admin %}
+              <form method="post" action="{{ url_for('layouts.eliminar', id=pl.id) }}"
+                    onsubmit="return confirm('¿Eliminar plantilla {{ pl.nombre|e }}?');" class="d-inline">
+                <button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="g1-card">
+    <div class="g1-empty">
+      <i class="bi bi-palette"></i>
+      <p>No tienes plantillas personalizadas. Crea una para personalizar tus documentos PDF.</p>
+      {% if current_user.puede_editar %}
+        <a href="{{ url_for('layouts.nuevo') }}" class="btn btn-primary">Crear la primera</a>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

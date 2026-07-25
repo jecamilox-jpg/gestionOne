@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block titulo %}{% if cliente %}Editar cliente{% else %}Nuevo cliente{% endif %}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb"><a href="{{ url_for('clientes.lista') }}">Clientes</a> / <span>{% if cliente %}{{ cliente.nombre }}{% else %}Nuevo{% endif %}</span></nav>
+    <h1 class="g1-page-title">{% if cliente %}Editar cliente{% else %}Nuevo cliente{% endif %}</h1>
+  </div>
+</div>
+
+<form method="post" class="g1-form">
+  <div class="g1-card">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-person-vcard"></i> Información general</h3>
+    </div>
+    <div class="g1-card-body">
+      <div class="row g-3">
+        <div class="col-md-7">
+          <label class="form-label required">Nombre o razón social</label>
+          <input type="text" name="nombre" class="form-control"
+                 value="{{ cliente.nombre if cliente else '' }}" required autofocus>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">NIT / Documento</label>
+          <input type="text" name="nit" class="form-control" value="{{ cliente.nit if cliente else '' }}">
+        </div>
+
+        <div class="col-md-8">
+          <label class="form-label">Dirección</label>
+          <input type="text" name="direccion" class="form-control" value="{{ cliente.direccion if cliente else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Ciudad</label>
+          <input type="text" name="ciudad" class="form-control" value="{{ cliente.ciudad if cliente else '' }}">
+        </div>
+
+        <div class="col-md-5">
+          <label class="form-label">Teléfono</label>
+          <input type="text" name="telefono" class="form-control" value="{{ cliente.telefono if cliente else '' }}">
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">Correo electrónico</label>
+          <input type="email" name="correo" class="form-control" value="{{ cliente.correo if cliente else '' }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Estado</label>
+          <select name="estado" class="form-select">
+            <option value="activo" {% if cliente and cliente.estado == 'activo' %}selected{% elif not cliente %}selected{% endif %}>Activo</option>
+            <option value="inactivo" {% if cliente and cliente.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-form-actions">
+    <a href="{{ url_for('clientes.lista') }}" class="btn btn-light">Cancelar</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-lg"></i> {% if cliente %}Guardar cambios{% else %}Crear cliente{% endif %}
+    </button>
+  </div>
+</form>
+{% endblock %}

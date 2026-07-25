@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block titulo %}Documentos — {{ cliente.nombre }}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb">
+      <a href="{{ url_for('clientes.lista') }}">Clientes</a> /
+      <a href="{{ url_for('clientes.detalle', id=cliente.id) }}">{{ cliente.nombre }}</a> /
+      <a href="{{ url_for('infraestructura.hub', cliente_id=cliente.id) }}">Infraestructura</a> /
+      <span>Documentos</span>
+    </nav>
+    <h1 class="g1-page-title">
+      <i class="bi bi-folder-fill text-warning"></i> Documentos del cliente
+    </h1>
+    <p class="g1-page-sub">Contratos, manuales, facturas y otros archivos.</p>
+  </div>
+</div>
+
+<div class="row g-3">
+  {# Form subir nuevo #}
+  <div class="col-lg-4">
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-cloud-upload-fill"></i> Subir documento</h3>
+      </div>
+      <div class="g1-card-body">
+        <form method="post" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label required">Archivo</label>
+            <input type="file" name="archivo" class="form-control" required>
+            <div class="form-text">Cualquier formato. Sin límite de tamaño.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nombre descriptivo</label>
+            <input type="text" name="nombre" class="form-control"
+                   placeholder="Si lo dejas vacío, se usa el nombre del archivo">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Categoría</label>
+            <select name="categoria" class="form-select">
+              <option value="contrato">Contrato</option>
+              <option value="manual">Manual</option>
+              <option value="factura">Factura</option>
+              <option value="diagrama">Diagrama de red</option>
+              <option value="foto">Foto / Imagen</option>
+              <option value="otro" selected>Otro</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Asociar a sede (opcional)</label>
+            <select name="sede_id" class="form-select">
+              <option value="">— General del cliente —</option>
+              {% for s in sedes %}
+                <option value="{{ s.id }}">{{ s.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea name="descripcion" rows="2" class="form-control"
+                      placeholder="Notas sobre el archivo..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-cloud-upload"></i> Subir archivo
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {# Lista de documentos #}
+  <div class="col-lg-8">
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title">
+          <i class="bi bi-files"></i> Archivos
+          <span class="text-muted text-small ms-2">{{ documentos|length }} documento{{ 's' if documentos|length != 1 else '' }}</span>
+        </h3>
+      </div>
+      <div class="g1-card-body p-0">
+        {% if documentos %}
+          <table class="g1-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Sede</th>
+                <th>Tamaño</th>
+                <th>Subido</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for doc in documentos %}
+              <tr>
+                <td class="text-center">
+                  {% if doc.es_pdf %}
+                    <i class="bi bi-file-earmark-pdf-fill text-danger fs-4"></i>
+                  {% elif doc.es_imagen %}
+                    <i class="bi bi-file-earmark-image-fill text-info fs-4"></i>
+                  {% else %}
+                    <i class="bi bi-file-earmark-fill text-muted fs-4"></i>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('infraestructura.documento_descargar', cliente_id=cliente.id, doc_id=doc.id) }}"
+                     class="g1-link-strong">{{ doc.nombre }}</a>
+                  {% if doc.descripcion %}
+                    <div class="text-muted text-small">{{ doc.descripcion|truncate(60) }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="g1-badge g1-badge-secondary">{{ doc.categoria }}</span>
+                </td>
+                <td>{{ doc.sede.nombre if doc.sede else '—' }}</td>
+                <td class="text-muted text-small">{{ doc.tamanio_legible }}</td>
+                <td class="text-muted text-small">{{ doc.creado_en.strftime('%d/%m/%Y') }}</td>
+                <td class="text-end">
+                  <div class="g1-row-actions">
+                    <a href="{{ url_for('infraestructura.documento_descargar', cliente_id=cliente.id, doc_id=doc.id) }}"
+                       class="btn btn-sm btn-light" title="Descargar">
+                      <i class="bi bi-download"></i>
+                    </a>
+                    <form method="post"
+                          action="{{ url_for('infraestructura.documento_eliminar', cliente_id=cliente.id, doc_id=doc.id) }}"
+                          onsubmit="return confirm('¿Eliminar el archivo {{ doc.nombre|e }}?');"
+                          class="d-inline">
+                      <button class="btn btn-sm btn-light text-danger" title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="g1-empty">
+            <i class="bi bi-folder"></i>
+            <p>Aún no has subido documentos para este cliente.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

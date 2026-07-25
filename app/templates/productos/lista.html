@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}Productos{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <h1 class="g1-page-title">Productos</h1>
+    <p class="g1-page-sub">Administra tu catálogo de productos y servicios.</p>
+  </div>
+  <div class="g1-page-actions">
+    {% if current_user.puede_editar %}
+      <a href="{{ url_for('productos.nuevo') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nuevo producto
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="g1-card">
+  <div class="g1-card-header">
+    <form class="g1-toolbar"
+          hx-get="{{ url_for('productos.lista') }}"
+          hx-trigger="keyup changed delay:300ms from:#q, change from:#estado"
+          hx-target="#tabla-productos"
+          hx-swap="innerHTML"
+          hx-push-url="true">
+      <div class="g1-search">
+        <i class="bi bi-search"></i>
+        <input type="text" id="q" name="q" value="{{ busqueda }}"
+               placeholder="Buscar por código, nombre o descripción...">
+      </div>
+      <select id="estado" name="estado" class="form-select">
+        <option value="">Todos los estados</option>
+        <option value="activo" {% if estado == 'activo' %}selected{% endif %}>Activo</option>
+        <option value="inactivo" {% if estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+      </select>
+    </form>
+  </div>
+
+  <div id="tabla-productos" class="g1-card-body p-0">
+    {% include "productos/_tabla.html" %}
+  </div>
+</div>
+{% endblock %}

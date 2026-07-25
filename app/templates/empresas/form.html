@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block titulo %}{% if empresa %}Editar empresa{% else %}Nueva empresa{% endif %}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb"><a href="{{ url_for('empresas.lista') }}">Empresas</a> / <span>{% if empresa %}{{ empresa.nombre }}{% else %}Nueva{% endif %}</span></nav>
+    <h1 class="g1-page-title">{% if empresa %}Editar empresa{% else %}Nueva empresa{% endif %}</h1>
+  </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="g1-form">
+  <div class="g1-card">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-building"></i> Datos de la empresa</h3>
+    </div>
+    <div class="g1-card-body">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label required">Nombre / Razón social</label>
+          <input type="text" name="nombre" class="form-control" required autofocus
+                 value="{{ empresa.nombre if empresa else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label required">NIT</label>
+          <input type="text" name="nit" class="form-control" required
+                 value="{{ empresa.nit if empresa else '' }}">
+        </div>
+
+        <div class="col-md-8">
+          <label class="form-label">Dirección</label>
+          <input type="text" name="direccion" class="form-control" value="{{ empresa.direccion if empresa else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Teléfono</label>
+          <input type="text" name="telefono" class="form-control" value="{{ empresa.telefono if empresa else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Correo electrónico</label>
+          <input type="email" name="correo" class="form-control" value="{{ empresa.correo if empresa else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Logo</label>
+          <input type="file" name="logo" accept=".png,.jpg,.jpeg,.gif,.webp,.svg" class="form-control">
+          {% if empresa and empresa.logo %}
+            <div class="mt-2 d-flex align-items-center gap-2">
+              <img src="{{ url_for('empresas.logo', filename=empresa.logo) }}" alt="" class="g1-logo-thumb">
+              <span class="text-muted text-small">Logo actual</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">
+            <i class="bi bi-pen text-primary"></i> Firma para PDFs
+          </label>
+          <input type="file" name="firma" accept=".png,.jpg,.jpeg,.webp" class="form-control">
+          <div class="form-text">
+            Preferiblemente PNG con fondo transparente. Se ajustará proporcionalmente
+            al tamaño correcto en cada documento.
+          </div>
+          {% if empresa and empresa.firma %}
+            <div class="mt-2 d-flex align-items-center gap-2">
+              <img src="{{ url_for('empresas.firma_archivo', filename=empresa.firma) }}"
+                   alt="" class="g1-firma-thumb">
+              <span class="text-muted text-small">Firma actual</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-card mt-3">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-credit-card-2-front"></i> Métodos de pago</h3>
+    </div>
+    <div class="g1-card-body">
+      <p class="text-muted text-small mb-3">
+        Estos números aparecerán automáticamente en el PDF de tus cuentas de cobro
+        (en la plantilla "Cuenta de cobro — Estilo Verde"). Déjalos en blanco si no aplica.
+      </p>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">
+            <i class="bi bi-key text-warning"></i> Llave / Transfiya
+          </label>
+          <input type="text" name="pago_llave" class="form-control"
+                 placeholder="Ej: 1074135696"
+                 value="{{ empresa.pago_llave if empresa and empresa.pago_llave else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">
+            <i class="bi bi-phone text-danger"></i> Daviplata
+          </label>
+          <input type="text" name="pago_daviplata" class="form-control"
+                 placeholder="Ej: 3012979313"
+                 value="{{ empresa.pago_daviplata if empresa and empresa.pago_daviplata else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">
+            <i class="bi bi-phone-vibrate text-info"></i> Nequi
+          </label>
+          <input type="text" name="pago_nequi" class="form-control"
+                 placeholder="Ej: 3012979313"
+                 value="{{ empresa.pago_nequi if empresa and empresa.pago_nequi else '' }}">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Etiqueta extra (opcional)</label>
+          <input type="text" name="pago_extra_label" class="form-control"
+                 placeholder="Ej: Bancolombia, PayPal..."
+                 value="{{ empresa.pago_extra_label if empresa and empresa.pago_extra_label else '' }}">
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Valor extra (opcional)</label>
+          <input type="text" name="pago_extra_valor" class="form-control"
+                 placeholder="Ej: Cuenta de ahorros 1234-5678901"
+                 value="{{ empresa.pago_extra_valor if empresa and empresa.pago_extra_valor else '' }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-card mt-3">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-fonts"></i> Tipografía</h3>
+    </div>
+    <div class="g1-card-body">
+      <p class="text-muted text-small mb-3">
+        Esta tipografía se aplicará tanto a la interfaz web como a los documentos PDF
+        (cotizaciones y cuentas de cobro). El cambio toma efecto al refrescar la página.
+      </p>
+      <div class="g1-tipografias">
+        {% set tipos = [
+          ('century_gothic', 'Century Gothic', '"Century Gothic", "URW Gothic", "Avant Garde", "Trebuchet MS", sans-serif',
+           'Geométrica y elegante. Ideal para documentos formales.'),
+          ('inter', 'Inter', '"Inter", "Segoe UI", system-ui, sans-serif',
+           'Moderna y nítida. La fuente típica de apps SaaS.'),
+          ('roboto', 'Roboto', '"Roboto", "Helvetica Neue", Arial, sans-serif',
+           'Neutra y muy legible. La fuente de Google y Android.'),
+          ('poppins', 'Poppins', '"Poppins", "Futura", "Trebuchet MS", sans-serif',
+           'Geométrica amigable y redondeada. Cálida y moderna.'),
+          ('lato', 'Lato', '"Lato", "Lucida Sans", "Trebuchet MS", sans-serif',
+           'Humanista y cálida. Perfecta para texto largo.'),
+          ('open_sans', 'Open Sans', '"Open Sans", "Segoe UI", Tahoma, sans-serif',
+           'Clásica, segura y neutral. Una de las más usadas en la web.'),
+        ] %}
+        {% set actual = empresa.tipografia if empresa and empresa.tipografia else 'century_gothic' %}
+
+        {% for tid, nombre, stack, desc in tipos %}
+          <label class="g1-tipo-card {% if actual == tid %}seleccionada{% endif %}">
+            <input type="radio" name="tipografia" value="{{ tid }}"
+                   {% if actual == tid %}checked{% endif %}>
+            <div class="g1-tipo-card-body">
+              <div class="g1-tipo-preview" style="font-family: {{ stack|safe }};">
+                <span class="g1-tipo-nombre">{{ nombre }}</span>
+                <span class="g1-tipo-muestra">Aa Bb Cc — áéíóú 123</span>
+              </div>
+              <div class="g1-tipo-desc">{{ desc }}</div>
+            </div>
+            <div class="g1-tipo-check"><i class="bi bi-check-circle-fill"></i></div>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-form-actions">
+    <a href="{{ url_for('empresas.lista') }}" class="btn btn-light">Cancelar</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-lg"></i> {% if empresa %}Guardar cambios{% else %}Crear empresa{% endif %}
+    </button>
+  </div>
+</form>
+
+{# Interactividad del selector de tipografía: marca como seleccionada la card del radio activo #}
+<script>
+(function() {
+  const cards = document.querySelectorAll('.g1-tipo-card');
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      cards.forEach(c => c.classList.remove('seleccionada'));
+      card.classList.add('seleccionada');
+      const radio = card.querySelector('input[type="radio"]');
+      if (radio) radio.checked = true;
+    });
+  });
+})();
+</script>
+{% endblock %}

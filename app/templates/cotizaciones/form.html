@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block titulo %}{% if cotizacion %}Editar {{ cotizacion.numero }}{% else %}Nueva cotización{% endif %}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb">
+      <a href="{{ url_for('cotizaciones.lista') }}">Cotizaciones</a> /
+      <span>{% if cotizacion %}{{ cotizacion.numero }}{% else %}Nueva{% endif %}</span>
+    </nav>
+    <h1 class="g1-page-title">{% if cotizacion %}Editar cotización{% else %}Nueva cotización{% endif %}</h1>
+  </div>
+</div>
+
+<form method="post" class="g1-form">
+  <div class="g1-card">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-info-circle"></i> Encabezado</h3>
+    </div>
+    <div class="g1-card-body">
+      <div class="row g-3">
+        <div class="col-md-7">
+          <label class="form-label required">Cliente</label>
+          <select name="cliente_id" class="form-select" required>
+            <option value="">— Selecciona un cliente —</option>
+            {% for cl in clientes %}
+              <option value="{{ cl.id }}"
+                {% if cotizacion and cotizacion.cliente_id == cl.id %}selected{% endif %}>
+                {{ cl.nombre }}{% if cl.nit %} · {{ cl.nit }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label required">Fecha</label>
+          <input type="date" name="fecha" class="form-control" required
+                 value="{{ cotizacion.fecha.isoformat() if cotizacion else '' }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Número</label>
+          <input type="text" class="form-control" disabled
+                 value="{{ cotizacion.numero if cotizacion else 'Automático' }}">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Observaciones</label>
+          <textarea name="observaciones" rows="2" class="form-control"
+                    placeholder="Notas adicionales, condiciones, validez...">{{ cotizacion.observaciones if cotizacion else '' }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Detalles dinámicos #}
+  <div class="g1-card mt-3">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-list-ul"></i> Productos / Servicios</h3>
+      <button type="button" id="btn-add-detalle" class="btn btn-sm btn-primary">
+        <i class="bi bi-plus-lg"></i> Agregar línea
+      </button>
+    </div>
+    <div class="g1-card-body p-0">
+      <table class="g1-table g1-table-detalle">
+        <thead>
+          <tr>
+            <th style="width: 200px;">Producto</th>
+            <th>Descripción</th>
+            <th class="text-end">Cantidad</th>
+            <th class="text-end">Valor unit.</th>
+            <th class="text-end">IVA %</th>
+            <th class="text-end">Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="detalle-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="g1-card-footer g1-totales">
+      <div class="g1-totales-row">
+        <span class="label">Subtotal</span>
+        <span class="value" id="display-subtotal">$ 0,00</span>
+      </div>
+      <div class="g1-totales-row">
+        <span class="label">IVA</span>
+        <span class="value" id="display-iva">$ 0,00</span>
+      </div>
+      <div class="g1-totales-row g1-totales-total">
+        <span class="label">Total</span>
+        <span class="value" id="display-total">$ 0,00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-form-actions">
+    <a href="{{ url_for('cotizaciones.lista') }}" class="btn btn-light">Cancelar</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-lg"></i> Guardar cotización
+    </button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Productos disponibles para autocompletar valores
+  window.GESTION_PRODUCTOS = [
+    {% for p in productos %}
+      {
+        "id": {{ p.id }},
+        "codigo": {{ p.codigo|tojson }},
+        "nombre": {{ p.nombre|tojson }},
+        "precio": {{ p.precio }},
+        "iva": {{ p.iva }}
+      }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  // Detalles iniciales (si es edición)
+  window.GESTION_DETALLES_INICIALES = [
+    {% if cotizacion and cotizacion.detalles %}
+      {% for d in cotizacion.detalles %}
+        {
+          "descripcion": {{ d.descripcion|tojson }},
+          "producto_id": {{ (d.producto_id or 0)|tojson }},
+          "cantidad": {{ d.cantidad }},
+          "valor_unitario": {{ d.valor_unitario }},
+          "iva": {{ d.iva }}
+        }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    {% endif %}
+  ];
+</script>
+<script src="{{ url_for('static', filename='js/cotizacion_form.js') }}"></script>
+{% endblock %}

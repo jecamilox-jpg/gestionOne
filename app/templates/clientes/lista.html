@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}Clientes{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <h1 class="g1-page-title">Clientes</h1>
+    <p class="g1-page-sub">Gestiona tu cartera de clientes y sus datos de contacto.</p>
+  </div>
+  <div class="g1-page-actions">
+    {% if current_user.puede_editar %}
+      <a href="{{ url_for('clientes.nuevo') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nuevo cliente
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="g1-card">
+  <div class="g1-card-header">
+    <form class="g1-toolbar"
+          hx-get="{{ url_for('clientes.lista') }}"
+          hx-trigger="keyup changed delay:300ms from:#q, change from:#estado"
+          hx-target="#tabla-clientes"
+          hx-swap="innerHTML"
+          hx-push-url="true">
+      <div class="g1-search">
+        <i class="bi bi-search"></i>
+        <input type="text" id="q" name="q" value="{{ busqueda }}"
+               placeholder="Buscar por nombre, NIT, ciudad o correo...">
+      </div>
+      <select id="estado" name="estado" class="form-select">
+        <option value="">Todos los estados</option>
+        <option value="activo" {% if estado == 'activo' %}selected{% endif %}>Activo</option>
+        <option value="inactivo" {% if estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+      </select>
+    </form>
+  </div>
+
+  <div id="tabla-clientes" class="g1-card-body p-0">
+    {% include "clientes/_tabla.html" %}
+  </div>
+</div>
+{% endblock %}

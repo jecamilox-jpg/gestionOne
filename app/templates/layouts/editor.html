@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block titulo %}Editor — {{ plantilla.nombre }}{% endblock %}
+
+{% block head_extra %}
+  <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.13/dist/css/grapes.min.css">
+  <style>
+    .g1-editor-wrap { display: grid; grid-template-columns: 220px 1fr 280px; gap: 0; height: calc(100vh - 180px); border: 1px solid var(--g1-border); border-radius: 10px; overflow: hidden; background: #fff; }
+    .g1-editor-left, .g1-editor-right { background: #fafbfd; overflow-y: auto; border-right: 1px solid var(--g1-border); }
+    .g1-editor-right { border-right: 0; border-left: 1px solid var(--g1-border); }
+    .g1-editor-center { background: #f0f1f5; overflow: hidden; }
+    #gjs { height: 100%; border: 0; }
+    .g1-editor-panel-title { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; padding: 12px 14px 6px; font-weight: 600; }
+    .gjs-block { width: auto; min-height: auto; padding: 10px 8px; font-size: 12px; }
+    .gjs-block-label { font-size: 11px; }
+  </style>
+{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb">
+      <a href="{{ url_for('layouts.lista') }}">Plantillas</a> / <span>{{ plantilla.nombre }}</span>
+    </nav>
+    <h1 class="g1-page-title">
+      {{ plantilla.nombre }}
+      <span class="g1-badge g1-badge-secondary ms-2">
+        {% if plantilla.tipo == 'cotizacion' %}Cotización{% else %}Cuenta de cobro{% endif %}
+      </span>
+    </h1>
+  </div>
+  <div class="g1-page-actions">
+    <button id="btn-guardar-layout" class="btn btn-primary">
+      <i class="bi bi-save"></i> Guardar
+    </button>
+  </div>
+</div>
+
+<div class="g1-editor-wrap">
+  <div class="g1-editor-left">
+    <div class="g1-editor-panel-title">Bloques</div>
+    <div id="blocks-panel"></div>
+  </div>
+
+  <div class="g1-editor-center">
+    <div id="gjs"></div>
+  </div>
+
+  <div class="g1-editor-right">
+    <div class="g1-editor-panel-title">Capas</div>
+    <div id="layers-panel"></div>
+    <div class="g1-editor-panel-title mt-3">Estilos</div>
+    <div id="styles-panel"></div>
+  </div>
+</div>
+
+<div class="alert alert-info mt-3 mb-0">
+  <i class="bi bi-lightbulb"></i>
+  <div class="ms-2">
+    <strong>Variables disponibles:</strong>
+    <code>{{ '{{numero}}' }}</code>, <code>{{ '{{fecha}}' }}</code>,
+    <code>{{ '{{cliente_nombre}}' }}</code>, <code>{{ '{{cliente_nit}}' }}</code>,
+    <code>{{ '{{total}}' }}</code>, <code>{{ '{{empresa_nombre}}' }}</code>
+    — se reemplazarán automáticamente al generar el PDF.
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/grapesjs@0.21.13/dist/grapes.min.js"></script>
+<script>
+  window.G1_LAYOUT = {
+    id: {{ plantilla.id }},
+    saveUrl: "{{ url_for('layouts.guardar', id=plantilla.id) }}",
+    html: {{ (plantilla.html_contenido or '')|tojson }},
+    css:  {{ (plantilla.css_contenido or '')|tojson }}
+  };
+</script>
+<script src="{{ url_for('static', filename='js/layout_designer.js') }}"></script>
+{% endblock %}

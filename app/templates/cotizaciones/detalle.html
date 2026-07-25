@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block titulo %}{{ cotizacion.numero }}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb">
+      <a href="{{ url_for('cotizaciones.lista') }}">Cotizaciones</a> /
+      <span>{{ cotizacion.numero }}</span>
+    </nav>
+    <h1 class="g1-page-title">
+      Cotización {{ cotizacion.numero }}
+      <span class="g1-badge {{ cotizacion.estado|badge_estado }} ms-2">{{ cotizacion.estado }}</span>
+    </h1>
+    <p class="g1-page-sub">Cliente: <strong>{{ cotizacion.cliente.nombre }}</strong> · Fecha {{ cotizacion.fecha|fecha_es }}</p>
+  </div>
+  <div class="g1-page-actions">
+    <a href="{{ url_for('cotizaciones.pdf', id=cotizacion.id) }}" target="_blank" class="btn btn-light">
+      <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+    </a>
+
+    {% if cotizacion.estado == 'borrador' and current_user.puede_editar %}
+      <a href="{{ url_for('cotizaciones.editar', id=cotizacion.id) }}" class="btn btn-light">
+        <i class="bi bi-pencil"></i> Editar
+      </a>
+      <form method="post" action="{{ url_for('cotizaciones.aprobar', id=cotizacion.id) }}" class="d-inline">
+        <button type="submit" class="btn btn-primary"
+                onclick="return confirm('¿Aprobar esta cotización?');">
+          <i class="bi bi-check-circle"></i> Aprobar
+        </button>
+      </form>
+    {% endif %}
+
+    {% if cotizacion.estado == 'aprobada' and current_user.puede_editar %}
+      <form method="post" action="{{ url_for('cotizaciones.convertir_a_cuenta', id=cotizacion.id) }}" class="d-inline">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-receipt"></i> Convertir a cuenta de cobro
+        </button>
+      </form>
+    {% endif %}
+
+    {% if cotizacion.estado != 'anulada' and current_user.puede_editar %}
+      <form method="post" action="{{ url_for('cotizaciones.anular', id=cotizacion.id) }}" class="d-inline">
+        <button type="submit" class="btn btn-light text-danger"
+                onclick="return confirm('¿Anular esta cotización?');">
+          <i class="bi bi-x-circle"></i> Anular
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-list-ul"></i> Detalle</h3>
+      </div>
+      <div class="g1-card-body p-0" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+        {% if cotizacion.detalles %}
+        <table class="g1-table" style="min-width:580px">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th class="text-end">Cantidad</th>
+              <th class="text-end">Valor unit.</th>
+              <th class="text-end">IVA</th>
+              <th class="text-end">Subtotal</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in cotizacion.detalles %}
+            <tr>
+              <td>
+                <div class="fw-medium">{{ d.descripcion }}</div>
+                {% if d.producto %}<div class="text-muted text-small">{{ d.producto.codigo }}</div>{% endif %}
+              </td>
+              <td class="text-end">{{ "%.2f"|format(d.cantidad) }}</td>
+              <td class="text-end">{{ d.valor_unitario|moneda }}</td>
+              <td class="text-end text-muted">{{ "%.1f"|format(d.iva) }}%</td>
+              <td class="text-end">{{ d.subtotal|moneda }}</td>
+              <td class="text-end fw-semibold">{{ d.total|moneda }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+          <div class="g1-empty py-4">
+            <i class="bi bi-list"></i>
+            <p>Esta cotización no tiene líneas de detalle.</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="g1-card-footer g1-totales">
+        <div class="g1-totales-row">
+          <span class="label">Subtotal</span>
+          <span class="value">{{ cotizacion.subtotal|moneda }}</span>
+        </div>
+        <div class="g1-totales-row">
+          <span class="label">IVA</span>
+          <span class="value">{{ cotizacion.iva_total|moneda }}</span>
+        </div>
+        <div class="g1-totales-row g1-totales-total">
+          <span class="label">Total</span>
+          <span class="value">{{ cotizacion.total|moneda }}</span>
+        </div>
+      </div>
+    </div>
+
+    {% if cotizacion.observaciones %}
+    <div class="g1-card mt-3">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-card-text"></i> Observaciones</h3>
+      </div>
+      <div class="g1-card-body">
+        <p class="mb-0">{{ cotizacion.observaciones }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    <div class="g1-card">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-person-vcard"></i> Cliente</h3>
+      </div>
+      <div class="g1-card-body">
+        <dl class="g1-dl">
+          <dt>Nombre</dt><dd><a href="{{ url_for('clientes.detalle', id=cotizacion.cliente.id) }}">{{ cotizacion.cliente.nombre }}</a></dd>
+          <dt>NIT</dt><dd>{{ cotizacion.cliente.nit or '—' }}</dd>
+          <dt>Correo</dt><dd>{{ cotizacion.cliente.correo or '—' }}</dd>
+          <dt>Teléfono</dt><dd>{{ cotizacion.cliente.telefono or '—' }}</dd>
+          <dt>Ciudad</dt><dd>{{ cotizacion.cliente.ciudad or '—' }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    {% if current_user.puede_editar %}
+    <div class="g1-card mt-3">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-envelope-arrow-up"></i> Enviar por correo</h3>
+      </div>
+      <div class="g1-card-body">
+        <form method="post" action="{{ url_for('cotizaciones.enviar', id=cotizacion.id) }}">
+          <label class="form-label">Destinatario</label>
+          <input type="email" name="destinatario" class="form-control"
+                 value="{{ cotizacion.cliente.correo or '' }}" required>
+          <button type="submit" class="btn btn-primary w-100 mt-3">
+            <i class="bi bi-send"></i> Enviar cotización
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if plantillas %}
+    <div class="g1-card mt-3">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title"><i class="bi bi-palette"></i> Plantilla PDF</h3>
+      </div>
+      <div class="g1-card-body">
+        <div class="d-grid gap-2">
+          {% for pl in plantillas %}
+            <a href="{{ url_for('cotizaciones.pdf', id=cotizacion.id, plantilla_id=pl.id) }}"
+               target="_blank" class="btn btn-light text-start">
+              <i class="bi bi-file-earmark-pdf"></i> {{ pl.nombre }}
+              {% if pl.es_predeterminada %}<span class="g1-badge g1-badge-success ms-1">Default</span>{% endif %}
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if current_user.es_admin %}
+    <div class="g1-card mt-3 border-danger-subtle">
+      <div class="g1-card-header">
+        <h3 class="g1-card-title text-danger"><i class="bi bi-exclamation-triangle"></i> Zona peligrosa</h3>
+      </div>
+      <div class="g1-card-body">
+        <form method="post" action="{{ url_for('cotizaciones.eliminar', id=cotizacion.id) }}"
+              onsubmit="return confirm('¿Eliminar definitivamente esta cotización?');">
+          <button class="btn btn-light text-danger w-100">
+            <i class="bi bi-trash"></i> Eliminar cotización
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

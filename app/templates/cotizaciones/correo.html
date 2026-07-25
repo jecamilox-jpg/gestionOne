@@ -1,0 +1,51 @@
+{# Cuerpo HTML del correo enviado al cliente con la cotización adjunta. #}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; color: #333; line-height: 1.5; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { border-bottom: 3px solid #635bff; padding-bottom: 15px; margin-bottom: 25px; }
+    .header h1 { color: #635bff; margin: 0 0 6px; font-size: 22px; }
+    .header p { margin: 0; color: #666; font-size: 14px; }
+    .resumen { background: #f7f8fa; border-radius: 8px; padding: 18px; margin: 20px 0; }
+    .resumen-row { display: flex; justify-content: space-between; margin: 6px 0; }
+    .resumen-row.total { border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px; font-weight: bold; font-size: 17px; color: #635bff; }
+    .footer { color: #888; font-size: 12px; text-align: center; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Cotización {{ cotizacion.numero }}</h1>
+    <p>{{ cotizacion.empresa.nombre }}</p>
+  </div>
+
+  <p>Estimado(a) <strong>{{ cotizacion.cliente.nombre }}</strong>,</p>
+  <p>Por medio del presente correo enviamos la cotización solicitada. Encontrará el documento PDF adjunto con todos los detalles.</p>
+
+  <div class="resumen">
+    <div class="resumen-row"><span>Número:</span><span>{{ cotizacion.numero }}</span></div>
+    <div class="resumen-row"><span>Fecha:</span><span>{{ cotizacion.fecha|fecha_es }}</span></div>
+    <div class="resumen-row"><span>Subtotal:</span><span>{{ cotizacion.subtotal|moneda }}</span></div>
+    <div class="resumen-row"><span>IVA:</span><span>{{ cotizacion.iva_total|moneda }}</span></div>
+    <div class="resumen-row total"><span>Total:</span><span>{{ cotizacion.total|moneda }}</span></div>
+  </div>
+
+  {% if cotizacion.observaciones %}
+    <p><strong>Observaciones:</strong><br>{{ cotizacion.observaciones }}</p>
+  {% endif %}
+
+  <p>Quedamos atentos a sus comentarios y aprobación.</p>
+
+  <p>
+    Cordialmente,<br>
+    <strong>{{ cotizacion.empresa.nombre }}</strong>
+    {% if cotizacion.empresa.telefono %}<br>Tel: {{ cotizacion.empresa.telefono }}{% endif %}
+    {% if cotizacion.empresa.correo %}<br>{{ cotizacion.empresa.correo }}{% endif %}
+  </p>
+
+  <div class="footer">
+    Este es un correo automático generado por GestiónOne.
+  </div>
+</body>
+</html>
