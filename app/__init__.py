@@ -60,9 +60,13 @@ def create_app(config_class=None):
     from app.modules.auditoria.routes import bp as auditoria_bp
     from app.modules.usuarios.routes import bp as usuarios_bp
     from app.modules.infraestructura import infra_bp
+    from app.modules.trabajo_fijo.routes import bp as trabajo_fijo_bp
+    from app.modules.presupuesto.routes import bp as presupuesto_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(dashboard_bp, url_prefix="/")
+    app.register_blueprint(trabajo_fijo_bp, url_prefix="/trabajo-fijo")
+    app.register_blueprint(presupuesto_bp, url_prefix="/presupuesto")
     app.register_blueprint(empresas_bp, url_prefix="/empresas")
     app.register_blueprint(clientes_bp, url_prefix="/clientes")
     app.register_blueprint(productos_bp, url_prefix="/productos")

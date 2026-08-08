@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block titulo %}{% if item %}Editar gasto{% else %}Nuevo gasto{% endif %}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb"><a href="{{ url_for('presupuesto.lista', mes=mes) }}">Presupuesto</a> / <span>{% if item %}{{ item.concepto }}{% else %}Nuevo{% endif %}</span></nav>
+    <h1 class="g1-page-title">{% if item %}Editar gasto{% else %}Nuevo gasto{% endif %}</h1>
+  </div>
+</div>
+
+<form method="post" class="g1-form">
+  <div class="g1-card">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-wallet2"></i> Información del gasto</h3>
+    </div>
+    <div class="g1-card-body">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label required">Concepto</label>
+          <input type="text" name="concepto" class="form-control"
+                 value="{{ item.concepto if item else '' }}" required autofocus
+                 placeholder="Ej: Arriendo, Mercado, Internet...">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Tipo</label>
+          <select name="tipo" class="form-select">
+            <option value="casa" {% if item and item.tipo == 'casa' %}selected{% endif %}>Casa</option>
+            <option value="personal" {% if item and item.tipo == 'personal' %}selected{% elif not item %}selected{% endif %}>Personal</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label required">Costo mensual</label>
+          <div class="input-group">
+            <span class="input-group-text">$</span>
+            <input type="number" name="costo" class="form-control" step="1"
+                   value="{{ item.costo|int if item else '' }}" required placeholder="894200">
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Fecha de pago</label>
+          <input type="text" name="fecha_pago" class="form-control"
+                 value="{{ item.fecha_pago if item else '' }}"
+                 placeholder="Ej: 30 Cada Mes, 15 y 30...">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Destino / Entidad</label>
+          <input type="text" name="destino" class="form-control"
+                 value="{{ item.destino if item else '' }}"
+                 placeholder="Nequi, NuBank, Daviplata...">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Mes</label>
+          <input type="month" name="mes" class="form-control"
+                 value="{{ item.mes if item else mes }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">% Quincena 1 (día 15)</label>
+          <div class="input-group">
+            <input type="number" name="porcentaje_q1" class="form-control" step="0.01" min="0" max="1"
+                   value="{{ item.porcentaje_q1 if item else '1' }}"
+                   placeholder="1.0 = 100%"
+                   id="pq1" oninput="document.getElementById('pq2').value = Math.max(0, 1 - parseFloat(this.value || 0)).toFixed(2);">
+            <span class="input-group-text">de 1.0</span>
+          </div>
+          <small class="text-muted">0.5 = 50%, 1.0 = 100% en Q1</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">% Quincena 2 (día 30)</label>
+          <div class="input-group">
+            <input type="number" name="porcentaje_q2" class="form-control" step="0.01" min="0" max="1"
+                   value="{{ item.porcentaje_q2 if item else '0' }}"
+                   placeholder="0.0 = 0%"
+                   id="pq2" oninput="document.getElementById('pq1').value = Math.max(0, 1 - parseFloat(this.value || 0)).toFixed(2);">
+            <span class="input-group-text">de 1.0</span>
+          </div>
+          <small class="text-muted">El complemento de Q1</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-form-actions">
+    <a href="{{ url_for('presupuesto.lista', mes=mes) }}" class="btn btn-light">Cancelar</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-lg"></i> {% if item %}Guardar cambios{% else %}Agregar gasto{% endif %}
+    </button>
+  </div>
+</form>
+{% endblock %}

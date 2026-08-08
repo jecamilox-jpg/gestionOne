@@ -1,0 +1,71 @@
+{# Fragmento de tabla de presupuesto #}
+{% if items %}
+<table class="g1-table">
+  <thead>
+    <tr>
+      <th>Concepto</th>
+      <th>Tipo</th>
+      <th class="text-end">Costo</th>
+      <th>Fecha de Pago</th>
+      <th>Destino</th>
+      <th class="text-end">% Q1</th>
+      <th class="text-end">Q1</th>
+      <th class="text-end">% Q2</th>
+      <th class="text-end">Q2</th>
+      <th class="text-end">Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for i in items %}
+    <tr>
+      <td class="fw-semibold">{{ i.concepto }}</td>
+      <td><span class="g1-badge {{ 'badge-info' if i.tipo == 'casa' else 'badge-warning' }}">{{ i.tipo_label }}</span></td>
+      <td class="text-end">${{ '{:,.0f}'.format(i.costo) }}</td>
+      <td class="text-muted">{{ i.fecha_pago or '—' }}</td>
+      <td>{{ i.destino or '—' }}</td>
+      <td class="text-end">{{ '%.0f'|format(i.porcentaje_q1 * 100) }}%</td>
+      <td class="text-end">${{ '{:,.0f}'.format(i.valor_q1) }}</td>
+      <td class="text-end">{{ '%.0f'|format(i.porcentaje_q2 * 100) }}%</td>
+      <td class="text-end">${{ '{:,.0f}'.format(i.valor_q2) }}</td>
+      <td class="text-end">
+        <div class="g1-row-actions">
+          {% if current_user.puede_editar %}
+            <a href="{{ url_for('presupuesto.editar', id=i.id) }}" class="btn btn-sm btn-light" title="Editar">
+              <i class="bi bi-pencil"></i>
+            </a>
+          {% endif %}
+          {% if current_user.es_admin %}
+            <form method="post" action="{{ url_for('presupuesto.eliminar', id=i.id) }}"
+                  onsubmit="return confirm('¿Eliminar {{ i.concepto|e }}?');" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-light text-danger" title="Eliminar">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="fw-bold" style="border-top: 2px solid var(--bs-border-color);">
+      <td colspan="2">TOTAL</td>
+      <td class="text-end">${{ '{:,.0f}'.format(total_costo) }}</td>
+      <td colspan="2"></td>
+      <td></td>
+      <td class="text-end">${{ '{:,.0f}'.format(total_q1) }}</td>
+      <td></td>
+      <td class="text-end">${{ '{:,.0f}'.format(total_q2) }}</td>
+      <td></td>
+    </tr>
+  </tfoot>
+</table>
+{% else %}
+  <div class="g1-empty">
+    <i class="bi bi-wallet2"></i>
+    <p>No hay gastos registrados para este mes.</p>
+    {% if current_user.puede_editar %}
+      <a href="{{ url_for('presupuesto.nuevo') }}" class="btn btn-primary">Agregar el primero</a>
+    {% endif %}
+  </div>
+{% endif %}

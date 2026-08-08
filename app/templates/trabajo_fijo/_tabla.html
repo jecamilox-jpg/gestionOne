@@ -1,0 +1,58 @@
+{# Fragmento de tabla para trabajo fijo #}
+{% if trabajos %}
+<table class="g1-table">
+  <thead>
+    <tr>
+      <th>Empresa</th>
+      <th>Fecha Ingreso</th>
+      <th class="text-end">Salario Base</th>
+      <th class="text-end">Días Trabajados</th>
+      <th class="text-end">Liquidación</th>
+      <th>Estado</th>
+      <th class="text-end">Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in trabajos %}
+    <tr>
+      <td>
+        <a href="{{ url_for('trabajo_fijo.detalle', id=t.id) }}" class="g1-link-strong">{{ t.empresa_nombre }}</a>
+      </td>
+      <td>{{ t.fecha_ingreso.strftime('%d/%m/%Y') }}</td>
+      <td class="text-end">${{ '{:,.0f}'.format(t.salario_base) }}</td>
+      <td class="text-end">{{ t.dias_trabajados }}</td>
+      <td class="text-end fw-bold text-success">${{ '{:,.0f}'.format(t.liquidacion) }}</td>
+      <td><span class="g1-badge {{ 'badge-success' if t.estado == 'activo' else 'badge-secondary' }}">{{ t.estado }}</span></td>
+      <td class="text-end">
+        <div class="g1-row-actions">
+          <a href="{{ url_for('trabajo_fijo.detalle', id=t.id) }}" class="btn btn-sm btn-light" title="Ver">
+            <i class="bi bi-eye"></i>
+          </a>
+          {% if current_user.puede_editar %}
+            <a href="{{ url_for('trabajo_fijo.editar', id=t.id) }}" class="btn btn-sm btn-light" title="Editar">
+              <i class="bi bi-pencil"></i>
+            </a>
+          {% endif %}
+          {% if current_user.es_admin %}
+            <form method="post" action="{{ url_for('trabajo_fijo.eliminar', id=t.id) }}"
+                  onsubmit="return confirm('¿Eliminar {{ t.empresa_nombre|e }}?');" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-light text-danger" title="Eliminar">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <div class="g1-empty">
+    <i class="bi bi-briefcase"></i>
+    <p>Aún no tienes empleos fijos registrados.</p>
+    {% if current_user.puede_editar %}
+      <a href="{{ url_for('trabajo_fijo.nuevo') }}" class="btn btn-primary">Agregar el primero</a>
+    {% endif %}
+  </div>
+{% endif %}

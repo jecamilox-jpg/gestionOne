@@ -12,6 +12,16 @@
       <i class="bi bi-grid-1x2-fill"></i> <span class="label">Dashboard</span>
     </a>
 
+    <div class="g1-nav-section">Personal</div>
+    <a href="{{ url_for('trabajo_fijo.lista') }}"
+       class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('trabajo_fijo.') %}active{% endif %}">
+      <i class="bi bi-briefcase-fill"></i> <span class="label">Trabajo Fijo</span>
+    </a>
+    <a href="{{ url_for('presupuesto.lista') }}"
+       class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('presupuesto.') %}active{% endif %}">
+      <i class="bi bi-wallet2"></i> <span class="label">Presupuesto</span>
+    </a>
+
     <div class="g1-nav-section">Operación</div>
     <a href="{{ url_for('clientes.lista') }}"
        class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('clientes.') %}active{% endif %}">

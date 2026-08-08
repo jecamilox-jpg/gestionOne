@@ -458,6 +458,112 @@ class NotaCliente(db.Model):
         return f"<NotaCliente cliente={self.cliente_id}>"
 
 
+# --------------------------------------------------------------------- #
+#  TRABAJO FIJO (empleo formal / liquidación laboral colombiana)          #
+# --------------------------------------------------------------------- #
+class TrabajoFijo(db.Model):
+    __tablename__ = "trabajo_fijo"
+
+    id = db.Column(db.Integer, primary_key=True)
+    empresa_nombre = db.Column(db.String(200), nullable=False)
+    fecha_ingreso = db.Column(db.Date, nullable=False)
+    salario_base = db.Column(db.Float, nullable=False, default=0.0)
+    auxilio_transporte = db.Column(db.Float, default=0.0)
+    estado = db.Column(db.String(20), default="activo")   # activo | inactivo
+    notas = db.Column(db.Text)
+    creado_en = db.Column(db.DateTime, default=datetime.utcnow)
+
+    empresa_id = db.Column(db.Integer, db.ForeignKey("empresas.id"), nullable=False)
+    empresa = db.relationship("Empresa", backref=db.backref("trabajos_fijos", lazy="dynamic"))
+
+    @property
+    def dias_trabajados(self):
+        from datetime import date
+        return (date.today() - self.fecha_ingreso).days
+
+    @property
+    def salario_diario(self):
+        return self.salario_base / 30 if self.salario_base else 0
+
+    @property
+    def neto_diario(self):
+        salud = self.salario_base * 0.04
+        pension = self.salario_base * 0.04
+        return (self.salario_base + self.auxilio_transporte - salud - pension) / 30
+
+    @property
+    def neto_mensual(self):
+        salud = self.salario_base * 0.04
+        pension = self.salario_base * 0.04
+        return self.salario_base + self.auxilio_transporte - salud - pension
+
+    @property
+    def prima(self):
+        base = self.salario_base + self.auxilio_transporte
+        return base * self.dias_trabajados / 360
+
+    @property
+    def cesantias(self):
+        base = self.salario_base + self.auxilio_transporte
+        return base * self.dias_trabajados / 360
+
+    @property
+    def intereses_cesantias(self):
+        return self.cesantias * self.dias_trabajados * 0.12 / 360
+
+    @property
+    def dias_vacaciones(self):
+        return self.dias_trabajados * 15 / 360
+
+    @property
+    def vacaciones(self):
+        return self.salario_diario * self.dias_vacaciones
+
+    @property
+    def liquidacion(self):
+        return self.prima + self.cesantias + self.intereses_cesantias + self.vacaciones
+
+    def __repr__(self):
+        return f"<TrabajoFijo {self.empresa_nombre}>"
+
+
+# --------------------------------------------------------------------- #
+#  PRESUPUESTO (gastos mensuales / quincenales)                          #
+# --------------------------------------------------------------------- #
+class ItemPresupuesto(db.Model):
+    __tablename__ = "items_presupuesto"
+
+    id = db.Column(db.Integer, primary_key=True)
+    concepto = db.Column(db.String(150), nullable=False)
+    tipo = db.Column(db.String(30), default="personal")   # casa | personal
+    costo = db.Column(db.Float, nullable=False, default=0.0)
+    fecha_pago = db.Column(db.String(100))                 # "15 Cada Mes", "30 Cada Mes", etc.
+    destino = db.Column(db.String(100))                    # Nequi, NuBank, Daviplata, etc.
+    porcentaje_q1 = db.Column(db.Float, default=1.0)       # fracción 0-1
+    porcentaje_q2 = db.Column(db.Float, default=0.0)       # fracción 0-1
+    mes = db.Column(db.String(20), nullable=False)         # "2026-08"
+    estado = db.Column(db.String(20), default="activo")
+    creado_en = db.Column(db.DateTime, default=datetime.utcnow)
+
+    empresa_id = db.Column(db.Integer, db.ForeignKey("empresas.id"), nullable=False)
+    empresa = db.relationship("Empresa", backref=db.backref("items_presupuesto", lazy="dynamic"))
+
+    @property
+    def valor_q1(self):
+        return self.costo * self.porcentaje_q1
+
+    @property
+    def valor_q2(self):
+        return self.costo * self.porcentaje_q2
+
+    @property
+    def tipo_label(self):
+        return {"casa": "Casa", "personal": "Personal"}.get(self.tipo, self.tipo.title())
+
+    def __repr__(self):
+        return f"<ItemPresupuesto {self.concepto}>"
+
+
 class Credencial(db.Model):
     """
     Credencial / acceso a una plataforma del cliente.

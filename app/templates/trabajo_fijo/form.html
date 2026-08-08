@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block titulo %}{% if trabajo %}Editar empleo{% else %}Nuevo empleo{% endif %}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb"><a href="{{ url_for('trabajo_fijo.lista') }}">Trabajo Fijo</a> / <span>{% if trabajo %}{{ trabajo.empresa_nombre }}{% else %}Nuevo{% endif %}</span></nav>
+    <h1 class="g1-page-title">{% if trabajo %}Editar empleo{% else %}Nuevo empleo fijo{% endif %}</h1>
+  </div>
+</div>
+
+<form method="post" class="g1-form">
+  <div class="g1-card">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-briefcase-fill"></i> Información del empleo</h3>
+    </div>
+    <div class="g1-card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label required">Empresa / Empleador</label>
+          <input type="text" name="empresa_nombre" class="form-control"
+                 value="{{ trabajo.empresa_nombre if trabajo else '' }}" required autofocus
+                 placeholder="Ej: Química Patric LTDA">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label required">Fecha de ingreso</label>
+          <input type="date" name="fecha_ingreso" class="form-control"
+                 value="{{ trabajo.fecha_ingreso.strftime('%Y-%m-%d') if trabajo else '' }}" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Estado</label>
+          <select name="estado" class="form-select">
+            <option value="activo" {% if trabajo and trabajo.estado == 'activo' %}selected{% elif not trabajo %}selected{% endif %}>Activo</option>
+            <option value="inactivo" {% if trabajo and trabajo.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label required">Salario base mensual</label>
+          <div class="input-group">
+            <span class="input-group-text">$</span>
+            <input type="number" name="salario_base" class="form-control" step="1"
+                   value="{{ trabajo.salario_base|int if trabajo else '' }}" required
+                   placeholder="2750000">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Auxilio de transporte</label>
+          <div class="input-group">
+            <span class="input-group-text">$</span>
+            <input type="number" name="auxilio_transporte" class="form-control" step="1"
+                   value="{{ trabajo.auxilio_transporte|int if trabajo else '200000' }}"
+                   placeholder="200000">
+          </div>
+          <small class="text-muted">Valor vigente 2025: $200.000 — 2026: $249.095</small>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Notas</label>
+          <textarea name="notas" class="form-control" rows="2" placeholder="Observaciones opcionales...">{{ trabajo.notas if trabajo else '' }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g1-form-actions">
+    <a href="{{ url_for('trabajo_fijo.lista') }}" class="btn btn-light">Cancelar</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-lg"></i> {% if trabajo %}Guardar cambios{% else %}Registrar empleo{% endif %}
+    </button>
+  </div>
+</form>
+{% endblock %}

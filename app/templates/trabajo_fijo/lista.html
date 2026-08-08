@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}Trabajo Fijo{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <h1 class="g1-page-title">Trabajo Fijo</h1>
+    <p class="g1-page-sub">Registra tus empleos formales y consulta la liquidación acumulada a la fecha.</p>
+  </div>
+  <div class="g1-page-actions">
+    {% if current_user.puede_editar %}
+      <a href="{{ url_for('trabajo_fijo.nuevo') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nuevo empleo
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="g1-card">
+  <div class="g1-card-header">
+    <form class="g1-toolbar"
+          hx-get="{{ url_for('trabajo_fijo.lista') }}"
+          hx-trigger="change from:#estado"
+          hx-target="#tabla-trabajos"
+          hx-swap="innerHTML"
+          hx-push-url="true">
+      <select id="estado" name="estado" class="form-select">
+        <option value="">Todos los estados</option>
+        <option value="activo" {% if estado == 'activo' %}selected{% endif %}>Activo</option>
+        <option value="inactivo" {% if estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+      </select>
+    </form>
+  </div>
+
+  <div id="tabla-trabajos" class="g1-card-body p-0">
+    {% include "trabajo_fijo/_tabla.html" %}
+  </div>
+</div>
+{% endblock %}

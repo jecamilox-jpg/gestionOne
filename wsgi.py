@@ -15,7 +15,8 @@ import secrets
 from app import create_app, db
 from app.models import (
     Usuario, Empresa, Cliente, Producto,
-    Cotizacion, CuentaCobro, PlantillaLayout
+    Cotizacion, CuentaCobro, PlantillaLayout,
+    TrabajoFijo, ItemPresupuesto,
 )
 from app.utils.plantilla_verde import instalar_plantilla_verde
 from app.utils.plantilla_azul import instalar_plantilla_azul

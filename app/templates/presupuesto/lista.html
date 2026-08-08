@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block titulo %}Presupuesto{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <h1 class="g1-page-title">Presupuesto</h1>
+    <p class="g1-page-sub">Control de gastos mensuales con distribución quincenal (Q1: día 15 — Q2: día 30).</p>
+  </div>
+  <div class="g1-page-actions">
+    {% if current_user.puede_editar %}
+      <a href="{{ url_for('presupuesto.nuevo', mes=mes) }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nuevo gasto
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="g1-card">
+  <div class="g1-card-header">
+    <form class="g1-toolbar"
+          hx-get="{{ url_for('presupuesto.lista') }}"
+          hx-trigger="change from:#mes, change from:#tipo"
+          hx-target="#tabla-presupuesto"
+          hx-swap="innerHTML"
+          hx-push-url="true">
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <input type="month" id="mes" name="mes" class="form-control" value="{{ mes }}" style="max-width:200px;">
+        <select id="tipo" name="tipo" class="form-select" style="max-width:160px;">
+          <option value="">Todos los tipos</option>
+          <option value="casa" {% if tipo == 'casa' %}selected{% endif %}>Casa</option>
+          <option value="personal" {% if tipo == 'personal' %}selected{% endif %}>Personal</option>
+        </select>
+      </div>
+    </form>
+  </div>
+
+  <div id="tabla-presupuesto" class="g1-card-body p-0">
+    {% include "presupuesto/_tabla.html" %}
+  </div>
+</div>
+
+{# Duplicar mes #}
+{% if current_user.puede_editar %}
+<div class="g1-card mt-4">
+  <div class="g1-card-header">
+    <h3 class="g1-card-title"><i class="bi bi-copy"></i> Duplicar presupuesto a otro mes</h3>
+  </div>
+  <div class="g1-card-body">
+    <form method="post" action="{{ url_for('presupuesto.duplicar_mes') }}" class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label">Mes origen</label>
+        <input type="month" name="mes_origen" class="form-control" value="{{ mes }}">
+      </div>
+      <div class="col-auto d-flex align-items-center pt-4">
+        <i class="bi bi-arrow-right fs-4"></i>
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Mes destino</label>
+        <input type="month" name="mes_destino" class="form-control">
+      </div>
+      <div class="col-auto pt-4">
+        <button type="submit" class="btn btn-light" onclick="return confirm('¿Copiar todos los gastos?');">
+          <i class="bi bi-copy"></i> Duplicar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
