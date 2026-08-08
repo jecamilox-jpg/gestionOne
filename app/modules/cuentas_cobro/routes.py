@@ -10,7 +10,7 @@ from flask_login import login_required, current_user
 from sqlalchemy import or_
 
 from app import db
-from app.models import CuentaCobro, Cliente, PlantillaLayout, Cotizacion, ItemCuentaCobro
+from app.models import CuentaCobro, Cliente, PlantillaLayout, Cotizacion, ItemCuentaCobro, Producto
 from app.utils.decoradores import rol_requerido
 from app.utils.auditoria import registrar_evento
 from app.utils.pdf import generar_pdf_cuenta_cobro
@@ -101,7 +101,10 @@ def nueva():
     clientes = Cliente.query.filter_by(
         empresa_id=current_user.empresa_id, estado="activo"
     ).order_by(Cliente.nombre).all()
-    return render_template("cuentas_cobro/form.html", cuenta=None, clientes=clientes)
+    productos = Producto.query.filter_by(
+        empresa_id=current_user.empresa_id, estado="activo"
+    ).order_by(Producto.nombre).all()
+    return render_template("cuentas_cobro/form.html", cuenta=None, clientes=clientes, productos=productos)
 
 
 @bp.route("/<int:id>/editar", methods=["GET", "POST"])
@@ -147,7 +150,10 @@ def editar(id):
     clientes = Cliente.query.filter_by(
         empresa_id=current_user.empresa_id
     ).order_by(Cliente.nombre).all()
-    return render_template("cuentas_cobro/form.html", cuenta=cuenta, clientes=clientes)
+    productos = Producto.query.filter_by(
+        empresa_id=current_user.empresa_id, estado="activo"
+    ).order_by(Producto.nombre).all()
+    return render_template("cuentas_cobro/form.html", cuenta=cuenta, clientes=clientes, productos=productos)
 
 
 @bp.route("/<int:id>")

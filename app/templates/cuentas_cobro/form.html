@@ -71,9 +71,10 @@
       <table class="g1-table" id="tabla-items">
         <thead>
           <tr>
-            <th style="width:50%">Descripción</th>
-            <th style="width:15%" class="text-end">Cantidad</th>
-            <th style="width:20%" class="text-end">Valor unitario</th>
+            <th style="width:25%">Producto</th>
+            <th style="width:30%">Descripción</th>
+            <th style="width:12%" class="text-end">Cantidad</th>
+            <th style="width:18%" class="text-end">Valor unitario</th>
             <th style="width:10%" class="text-end">Subtotal</th>
             <th style="width:5%"></th>
           </tr>
@@ -82,7 +83,17 @@
           {% if cuenta and cuenta.items %}
             {% for item in cuenta.items %}
             <tr class="item-row">
-              <td><input type="text" name="item_descripcion[]" class="form-control form-control-sm" value="{{ item.descripcion }}" required placeholder="Descripción del servicio..."></td>
+              <td>
+                <select class="form-select form-select-sm item-producto" onchange="seleccionarProducto(this)">
+                  <option value="">— Libre —</option>
+                  {% for p in productos %}
+                    <option value="{{ p.id }}" data-nombre="{{ p.nombre }}" data-precio="{{ p.precio }}">
+                      {{ p.codigo }} · {{ p.nombre }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td><input type="text" name="item_descripcion[]" class="form-control form-control-sm item-desc" value="{{ item.descripcion }}" required placeholder="Descripción..."></td>
               <td><input type="number" name="item_cantidad[]" class="form-control form-control-sm text-end item-cant" value="{{ item.cantidad }}" min="0" step="0.01" oninput="calcularTotales()"></td>
               <td>
                 <div class="input-group input-group-sm">
@@ -102,7 +113,7 @@
         </tbody>
         <tfoot>
           <tr style="border-top: 2px solid var(--bs-border-color);">
-            <td colspan="3" class="text-end fw-bold">TOTAL</td>
+            <td colspan="4" class="text-end fw-bold">TOTAL</td>
             <td class="text-end fw-bold text-success" id="total-display">
               ${{ '{:,.0f}'.format(cuenta.valor) if cuenta else '0' }}
             </td>
@@ -124,17 +135,43 @@
 </form>
 
 <script>
-function agregarItem(desc, cant, val) {
+// Catálogo de productos como JSON para el JS
+const productosJSON = {{ productos|map(attribute='__dict__')|list|tojson if false else '[]' }};
+
+function opcionesProducto() {
+  let html = '<option value="">— Libre —</option>';
+  {% for p in productos %}
+  html += '<option value="{{ p.id }}" data-nombre="{{ p.nombre }}" data-precio="{{ p.precio }}">{{ p.codigo }} · {{ p.nombre }}</option>';
+  {% endfor %}
+  return html;
+}
+
+function seleccionarProducto(select) {
+  const row = select.closest('tr');
+  const opt = select.selectedOptions[0];
+  if (opt && opt.value) {
+    row.querySelector('.item-desc').value = opt.dataset.nombre || '';
+    row.querySelector('.item-val').value = opt.dataset.precio || 0;
+    calcularTotales();
+  }
+}
+
+function agregarItem() {
   const tbody = document.getElementById('items-body');
   const tr = document.createElement('tr');
   tr.className = 'item-row';
   tr.innerHTML = `
-    <td><input type="text" name="item_descripcion[]" class="form-control form-control-sm" value="${desc || ''}" required placeholder="Descripción del servicio..."></td>
-    <td><input type="number" name="item_cantidad[]" class="form-control form-control-sm text-end item-cant" value="${cant || 1}" min="0" step="0.01" oninput="calcularTotales()"></td>
+    <td>
+      <select class="form-select form-select-sm item-producto" onchange="seleccionarProducto(this)">
+        ${opcionesProducto()}
+      </select>
+    </td>
+    <td><input type="text" name="item_descripcion[]" class="form-control form-control-sm item-desc" value="" required placeholder="Descripción..."></td>
+    <td><input type="number" name="item_cantidad[]" class="form-control form-control-sm text-end item-cant" value="1" min="0" step="0.01" oninput="calcularTotales()"></td>
     <td>
       <div class="input-group input-group-sm">
         <span class="input-group-text">$</span>
-        <input type="number" name="item_valor[]" class="form-control form-control-sm text-end item-val" value="${val || 0}" min="0" step="0.01" oninput="calcularTotales()">
+        <input type="number" name="item_valor[]" class="form-control form-control-sm text-end item-val" value="0" min="0" step="0.01" oninput="calcularTotales()">
       </div>
     </td>
     <td class="text-end fw-semibold item-sub">$0</td>
@@ -145,7 +182,7 @@ function agregarItem(desc, cant, val) {
     </td>
   `;
   tbody.appendChild(tr);
-  tr.querySelector('input').focus();
+  tr.querySelector('.item-producto').focus();
   calcularTotales();
 }
 
@@ -162,7 +199,7 @@ function calcularTotales() {
   document.getElementById('valor-hidden').value = total;
 }
 
-document.getElementById('btn-agregar-item').addEventListener('click', () => agregarItem());
+document.getElementById('btn-agregar-item').addEventListener('click', agregarItem);
 
 if (document.querySelectorAll('.item-row').length === 0) {
   agregarItem();
