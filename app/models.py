@@ -242,6 +242,30 @@ class CuentaCobro(db.Model):
         return f"<CuentaCobro {self.consecutivo}>"
 
 
+class ItemCuentaCobro(db.Model):
+    """Línea / item de una cuenta de cobro."""
+    __tablename__ = "items_cuenta_cobro"
+
+    id = db.Column(db.Integer, primary_key=True)
+    cuenta_id = db.Column(db.Integer, db.ForeignKey("cuentas_cobro.id"), nullable=False, index=True)
+    descripcion = db.Column(db.String(300), nullable=False)
+    cantidad = db.Column(db.Float, default=1.0)
+    valor_unitario = db.Column(db.Float, default=0.0)
+
+    cuenta = db.relationship(
+        "CuentaCobro",
+        backref=db.backref("items", lazy="joined", cascade="all, delete-orphan",
+                           order_by="ItemCuentaCobro.id"),
+    )
+
+    @property
+    def subtotal(self):
+        return (self.cantidad or 0) * (self.valor_unitario or 0)
+
+    def __repr__(self):
+        return f"<ItemCuentaCobro {self.descripcion[:30]}>"
+
+
 # --------------------------------------------------------------------- #
 #  PLANTILLA LAYOUT (diseñador de documentos)                            #
 # --------------------------------------------------------------------- #

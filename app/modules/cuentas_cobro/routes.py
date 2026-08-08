@@ -10,7 +10,7 @@ from flask_login import login_required, current_user
 from sqlalchemy import or_
 
 from app import db
-from app.models import CuentaCobro, Cliente, PlantillaLayout, Cotizacion
+from app.models import CuentaCobro, Cliente, PlantillaLayout, Cotizacion, ItemCuentaCobro
 from app.utils.decoradores import rol_requerido
 from app.utils.auditoria import registrar_evento
 from app.utils.pdf import generar_pdf_cuenta_cobro
@@ -67,13 +67,32 @@ def nueva():
             consecutivo=_siguiente_consecutivo(),
             fecha=datetime.strptime(request.form["fecha"], "%Y-%m-%d").date(),
             concepto=request.form.get("concepto", "").strip(),
-            valor=float(request.form.get("valor") or 0),
+            valor=0,
             estado=request.form.get("estado", "pendiente"),
             cliente_id=int(request.form["cliente_id"]),
             empresa_id=current_user.empresa_id,
             usuario_id=current_user.id,
         )
         db.session.add(cuenta)
+        db.session.flush()
+
+        descripciones = request.form.getlist("item_descripcion[]")
+        cantidades = request.form.getlist("item_cantidad[]")
+        valores = request.form.getlist("item_valor[]")
+        total = 0
+        for desc, cant, val in zip(descripciones, cantidades, valores):
+            desc = desc.strip()
+            if not desc:
+                continue
+            c = float(cant or 1)
+            v = float(val or 0)
+            db.session.add(ItemCuentaCobro(
+                cuenta_id=cuenta.id, descripcion=desc,
+                cantidad=c, valor_unitario=v,
+            ))
+            total += c * v
+
+        cuenta.valor = total or float(request.form.get("valor") or 0)
         db.session.commit()
         registrar_evento("crear", "cuentas_cobro", f"Cuenta {cuenta.consecutivo}")
         flash("Cuenta de cobro creada.", "success")
@@ -97,9 +116,29 @@ def editar(id):
     if request.method == "POST":
         cuenta.fecha = datetime.strptime(request.form["fecha"], "%Y-%m-%d").date()
         cuenta.concepto = request.form.get("concepto", "").strip()
-        cuenta.valor = float(request.form.get("valor") or 0)
         cuenta.estado = request.form.get("estado", "pendiente")
         cuenta.cliente_id = int(request.form["cliente_id"])
+
+        for item in list(cuenta.items):
+            db.session.delete(item)
+
+        descripciones = request.form.getlist("item_descripcion[]")
+        cantidades = request.form.getlist("item_cantidad[]")
+        valores = request.form.getlist("item_valor[]")
+        total = 0
+        for desc, cant, val in zip(descripciones, cantidades, valores):
+            desc = desc.strip()
+            if not desc:
+                continue
+            c = float(cant or 1)
+            v = float(val or 0)
+            db.session.add(ItemCuentaCobro(
+                cuenta_id=cuenta.id, descripcion=desc,
+                cantidad=c, valor_unitario=v,
+            ))
+            total += c * v
+
+        cuenta.valor = total or float(request.form.get("valor") or 0)
         db.session.commit()
         registrar_evento("editar", "cuentas_cobro", f"Cuenta {cuenta.consecutivo}")
         flash("Cuenta actualizada.", "success")

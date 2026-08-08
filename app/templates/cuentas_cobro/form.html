@@ -48,14 +48,6 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label required">Valor</label>
-          <div class="input-group">
-            <span class="input-group-text">$</span>
-            <input type="number" min="0" step="0.01" name="valor" class="form-control text-end"
-                   value="{{ cuenta.valor if cuenta else 0 }}" required>
-          </div>
-        </div>
-        <div class="col-md-6">
           <label class="form-label">Estado</label>
           <select name="estado" class="form-select">
             <option value="pendiente" {% if cuenta and cuenta.estado == 'pendiente' %}selected{% elif not cuenta %}selected{% endif %}>Pendiente</option>
@@ -67,6 +59,62 @@
     </div>
   </div>
 
+  {# Items / Líneas #}
+  <div class="g1-card mt-3">
+    <div class="g1-card-header">
+      <h3 class="g1-card-title"><i class="bi bi-list-ol"></i> Items</h3>
+      <button type="button" class="btn btn-sm btn-primary" id="btn-agregar-item">
+        <i class="bi bi-plus-lg"></i> Agregar item
+      </button>
+    </div>
+    <div class="g1-card-body p-0">
+      <table class="g1-table" id="tabla-items">
+        <thead>
+          <tr>
+            <th style="width:50%">Descripción</th>
+            <th style="width:15%" class="text-end">Cantidad</th>
+            <th style="width:20%" class="text-end">Valor unitario</th>
+            <th style="width:10%" class="text-end">Subtotal</th>
+            <th style="width:5%"></th>
+          </tr>
+        </thead>
+        <tbody id="items-body">
+          {% if cuenta and cuenta.items %}
+            {% for item in cuenta.items %}
+            <tr class="item-row">
+              <td><input type="text" name="item_descripcion[]" class="form-control form-control-sm" value="{{ item.descripcion }}" required placeholder="Descripción del servicio..."></td>
+              <td><input type="number" name="item_cantidad[]" class="form-control form-control-sm text-end item-cant" value="{{ item.cantidad }}" min="0" step="0.01" oninput="calcularTotales()"></td>
+              <td>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text">$</span>
+                  <input type="number" name="item_valor[]" class="form-control form-control-sm text-end item-val" value="{{ item.valor_unitario }}" min="0" step="0.01" oninput="calcularTotales()">
+                </div>
+              </td>
+              <td class="text-end fw-semibold item-sub">${{ '{:,.0f}'.format(item.subtotal) }}</td>
+              <td class="text-center">
+                <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="this.closest('tr').remove(); calcularTotales();" title="Quitar">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+        <tfoot>
+          <tr style="border-top: 2px solid var(--bs-border-color);">
+            <td colspan="3" class="text-end fw-bold">TOTAL</td>
+            <td class="text-end fw-bold text-success" id="total-display">
+              ${{ '{:,.0f}'.format(cuenta.valor) if cuenta else '0' }}
+            </td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <input type="hidden" name="valor" id="valor-hidden" value="{{ cuenta.valor if cuenta else 0 }}">
+
   <div class="g1-form-actions">
     <a href="{{ url_for('cuentas_cobro.lista') }}" class="btn btn-light">Cancelar</a>
     <button type="submit" class="btn btn-primary">
@@ -74,4 +122,50 @@
     </button>
   </div>
 </form>
+
+<script>
+function agregarItem(desc, cant, val) {
+  const tbody = document.getElementById('items-body');
+  const tr = document.createElement('tr');
+  tr.className = 'item-row';
+  tr.innerHTML = `
+    <td><input type="text" name="item_descripcion[]" class="form-control form-control-sm" value="${desc || ''}" required placeholder="Descripción del servicio..."></td>
+    <td><input type="number" name="item_cantidad[]" class="form-control form-control-sm text-end item-cant" value="${cant || 1}" min="0" step="0.01" oninput="calcularTotales()"></td>
+    <td>
+      <div class="input-group input-group-sm">
+        <span class="input-group-text">$</span>
+        <input type="number" name="item_valor[]" class="form-control form-control-sm text-end item-val" value="${val || 0}" min="0" step="0.01" oninput="calcularTotales()">
+      </div>
+    </td>
+    <td class="text-end fw-semibold item-sub">$0</td>
+    <td class="text-center">
+      <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="this.closest('tr').remove(); calcularTotales();" title="Quitar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+  tr.querySelector('input').focus();
+  calcularTotales();
+}
+
+function calcularTotales() {
+  let total = 0;
+  document.querySelectorAll('.item-row').forEach(row => {
+    const cant = parseFloat(row.querySelector('.item-cant').value) || 0;
+    const val = parseFloat(row.querySelector('.item-val').value) || 0;
+    const sub = cant * val;
+    row.querySelector('.item-sub').textContent = '$' + sub.toLocaleString('es-CO', {maximumFractionDigits: 0});
+    total += sub;
+  });
+  document.getElementById('total-display').textContent = '$' + total.toLocaleString('es-CO', {maximumFractionDigits: 0});
+  document.getElementById('valor-hidden').value = total;
+}
+
+document.getElementById('btn-agregar-item').addEventListener('click', () => agregarItem());
+
+if (document.querySelectorAll('.item-row').length === 0) {
+  agregarItem();
+}
+</script>
 {% endblock %}
