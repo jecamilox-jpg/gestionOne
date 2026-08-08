@@ -16,24 +16,65 @@
   </div>
 </div>
 
-<div class="g1-card">
-  <div class="g1-card-header">
-    <form class="g1-toolbar"
-          hx-get="{{ url_for('trabajo_fijo.lista') }}"
-          hx-trigger="change from:#estado"
-          hx-target="#tabla-trabajos"
-          hx-swap="innerHTML"
-          hx-push-url="true">
-      <select id="estado" name="estado" class="form-select">
-        <option value="">Todos los estados</option>
-        <option value="activo" {% if estado == 'activo' %}selected{% endif %}>Activo</option>
-        <option value="inactivo" {% if estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
-      </select>
-    </form>
-  </div>
+{% if trabajos %}
+<div class="row g-3">
+  {% for t in trabajos %}
+  <div class="col-md-6 col-lg-4">
+    <a href="{{ url_for('trabajo_fijo.detalle', id=t.id) }}" class="text-decoration-none">
+      <div class="g1-card h-100" style="transition: transform .15s, box-shadow .15s; cursor:pointer;"
+           onmouseenter="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,.1)'"
+           onmouseleave="this.style.transform=''; this.style.boxShadow=''">
+        <div class="g1-card-body">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div style="width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+                        background: {{ 'linear-gradient(135deg, #10b981, #059669)' if t.estado == 'activo' else 'linear-gradient(135deg, #94a3b8, #64748b)' }};
+                        color:white; font-size:1.3rem;">
+              <i class="bi bi-briefcase-fill"></i>
+            </div>
+            <div class="flex-grow-1 min-width-0">
+              <h5 class="mb-0 text-dark" style="font-size:1.05rem;">{{ t.empresa_nombre }}</h5>
+              <small class="text-muted">Desde {{ t.fecha_ingreso.strftime('%d/%m/%Y') }}</small>
+            </div>
+            <span class="g1-badge {{ 'badge-success' if t.estado == 'activo' else 'badge-secondary' }}">{{ t.estado }}</span>
+          </div>
 
-  <div id="tabla-trabajos" class="g1-card-body p-0">
-    {% include "trabajo_fijo/_tabla.html" %}
+          <div class="row g-2 text-center">
+            <div class="col-4">
+              <div style="background:var(--bs-light, #f8f9fa); border-radius:8px; padding:8px 4px;">
+                <div class="text-muted" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.5px;">Salario</div>
+                <div class="fw-bold text-dark" style="font-size:.85rem;">${{ '{:,.0f}'.format(t.salario_base) }}</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div style="background:var(--bs-light, #f8f9fa); border-radius:8px; padding:8px 4px;">
+                <div class="text-muted" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.5px;">Días</div>
+                <div class="fw-bold text-dark" style="font-size:.85rem;">{{ t.dias_trabajados }}</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-radius:8px; padding:8px 4px;">
+                <div class="text-muted" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.5px;">Liquidación</div>
+                <div class="fw-bold" style="font-size:.85rem; color:#059669;">${{ '{:,.0f}'.format(t.liquidacion) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="g1-card">
+  <div class="g1-card-body">
+    <div class="g1-empty">
+      <i class="bi bi-briefcase"></i>
+      <p>Aún no tienes empleos fijos registrados.</p>
+      {% if current_user.puede_editar %}
+        <a href="{{ url_for('trabajo_fijo.nuevo') }}" class="btn btn-primary">Agregar el primero</a>
+      {% endif %}
+    </div>
   </div>
 </div>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block titulo %}Presupuesto{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <h1 class="g1-page-title">Presupuesto</h1>
+    <p class="g1-page-sub">Control de gastos mensuales con distribución quincenal (Q1: día 15 — Q2: día 30).</p>
+  </div>
+  <div class="g1-page-actions">
+    {% if current_user.puede_editar %}
+      <a href="{{ url_for('presupuesto.nuevo') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nuevo gasto
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+{% if meses %}
+<div class="row g-3">
+  {% set colores = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#f97316','#6366f1','#14b8a6','#e11d48','#84cc16','#0ea5e9'] %}
+  {% for m in meses %}
+  <div class="col-md-6 col-lg-4 col-xl-3">
+    <a href="{{ url_for('presupuesto.detalle_mes', mes=m.mes) }}" class="text-decoration-none">
+      <div class="g1-card h-100" style="transition: transform .15s, box-shadow .15s; cursor:pointer;"
+           onmouseenter="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,.1)'"
+           onmouseleave="this.style.transform=''; this.style.boxShadow=''">
+        <div class="g1-card-body">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div style="width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+                        background: linear-gradient(135deg, {{ colores[loop.index0 % 12] }}, {{ colores[(loop.index0 + 3) % 12] }});
+                        color:white; font-size:1.1rem; font-weight:700;">
+              <i class="bi bi-calendar-month"></i>
+            </div>
+            <div>
+              <h5 class="mb-0 text-dark" style="font-size:1.1rem;">{{ m.nombre }}</h5>
+              <small class="text-muted">{{ m.anio }}</small>
+            </div>
+          </div>
+
+          <div class="row g-2 text-center">
+            <div class="col-6">
+              <div style="background:var(--bs-light, #f8f9fa); border-radius:8px; padding:10px 4px;">
+                <div class="text-muted" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.5px;">Gastos</div>
+                <div class="fw-bold text-dark" style="font-size:.95rem;">{{ m.total_items }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius:8px; padding:10px 4px;">
+                <div class="text-muted" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.5px;">Total</div>
+                <div class="fw-bold" style="font-size:.95rem; color:#b45309;">${{ '{:,.0f}'.format(m.total_costo) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+{# Duplicar mes #}
+{% if current_user.puede_editar %}
+<div class="g1-card mt-4">
+  <div class="g1-card-header">
+    <h3 class="g1-card-title"><i class="bi bi-copy"></i> Duplicar presupuesto a otro mes</h3>
+  </div>
+  <div class="g1-card-body">
+    <form method="post" action="{{ url_for('presupuesto.duplicar_mes') }}" class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label">Mes origen</label>
+        <input type="month" name="mes_origen" class="form-control">
+      </div>
+      <div class="col-auto d-flex align-items-center pt-4">
+        <i class="bi bi-arrow-right fs-4"></i>
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Mes destino</label>
+        <input type="month" name="mes_destino" class="form-control">
+      </div>
+      <div class="col-auto pt-4">
+        <button type="submit" class="btn btn-light" onclick="return confirm('¿Copiar todos los gastos?');">
+          <i class="bi bi-copy"></i> Duplicar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="g1-card">
+  <div class="g1-card-body">
+    <div class="g1-empty">
+      <i class="bi bi-wallet2"></i>
+      <p>Aún no tienes presupuestos registrados.</p>
+      {% if current_user.puede_editar %}
+        <a href="{{ url_for('presupuesto.nuevo') }}" class="btn btn-primary">Crear el primero</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

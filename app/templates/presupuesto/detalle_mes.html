@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block titulo %}Presupuesto — {{ nombre_mes }} {{ anio }}{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <nav class="g1-breadcrumb"><a href="{{ url_for('presupuesto.hub') }}">Presupuesto</a> / <span>{{ nombre_mes }} {{ anio }}</span></nav>
+    <h1 class="g1-page-title">{{ nombre_mes }} {{ anio }}</h1>
+    <p class="g1-page-sub">Distribución quincenal: Q1 (día 15) — Q2 (día 30)</p>
+  </div>
+  <div class="g1-page-actions">
+    {% if current_user.puede_editar %}
+      <a href="{{ url_for('presupuesto.nuevo', mes=mes) }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nuevo gasto
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+{# KPIs #}
+<div class="g1-kpi-grid mb-3">
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-blue"><i class="bi bi-receipt"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Total mes</span>
+      <span class="g1-kpi-value">${{ '{:,.0f}'.format(total_costo) }}</span>
+    </div>
+  </div>
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-violet"><i class="bi bi-calendar-event"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Quincena 1</span>
+      <span class="g1-kpi-value">${{ '{:,.0f}'.format(total_q1) }}</span>
+    </div>
+  </div>
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-green"><i class="bi bi-calendar-check"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Quincena 2</span>
+      <span class="g1-kpi-value">${{ '{:,.0f}'.format(total_q2) }}</span>
+    </div>
+  </div>
+  <div class="g1-kpi">
+    <div class="g1-kpi-icon kpi-orange"><i class="bi bi-hash"></i></div>
+    <div class="g1-kpi-body">
+      <span class="g1-kpi-label">Gastos</span>
+      <span class="g1-kpi-value">{{ items|length }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="g1-card">
+  <div class="g1-card-header">
+    <form class="g1-toolbar"
+          hx-get="{{ url_for('presupuesto.detalle_mes', mes=mes) }}"
+          hx-trigger="change from:#tipo"
+          hx-target="#tabla-presupuesto"
+          hx-swap="innerHTML">
+      <select id="tipo" name="tipo" class="form-select" style="max-width:160px;">
+        <option value="">Todos los tipos</option>
+        <option value="casa" {% if tipo == 'casa' %}selected{% endif %}>Casa</option>
+        <option value="personal" {% if tipo == 'personal' %}selected{% endif %}>Personal</option>
+      </select>
+    </form>
+  </div>
+  <div id="tabla-presupuesto" class="g1-card-body p-0">
+    {% include "presupuesto/_tabla.html" %}
+  </div>
+</div>
+{% endblock %}

@@ -1,9 +1,11 @@
 """
 CRUD de Presupuesto — gastos mensuales con distribución quincenal Q1/Q2.
+Vista principal: fichas por mes.  Click → detalle del mes con tabla de gastos.
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from datetime import datetime
+from sqlalchemy import func
 
 from app import db
 from app.models import ItemPresupuesto
@@ -12,6 +14,12 @@ from app.utils.auditoria import registrar_evento
 
 bp = Blueprint("presupuesto", __name__, template_folder="../../templates/presupuesto")
 
+MESES_ES = {
+    "01": "Enero", "02": "Febrero", "03": "Marzo", "04": "Abril",
+    "05": "Mayo", "06": "Junio", "07": "Julio", "08": "Agosto",
+    "09": "Septiembre", "10": "Octubre", "11": "Noviembre", "12": "Diciembre",
+}
+
 
 def _query_base():
     return ItemPresupuesto.query.filter_by(empresa_id=current_user.empresa_id)
@@ -19,10 +27,40 @@ def _query_base():
 
 @bp.route("/")
 @login_required
-def lista():
-    # Mes actual por defecto
-    hoy = datetime.today()
-    mes = request.args.get("mes", hoy.strftime("%Y-%m"))
+def hub():
+    """Vista principal: fichas por mes con resumen."""
+    rows = (
+        db.session.query(
+            ItemPresupuesto.mes,
+            func.count(ItemPresupuesto.id).label("total_items"),
+            func.sum(ItemPresupuesto.costo).label("total_costo"),
+        )
+        .filter_by(empresa_id=current_user.empresa_id)
+        .group_by(ItemPresupuesto.mes)
+        .order_by(ItemPresupuesto.mes.desc())
+        .all()
+    )
+
+    meses = []
+    for mes_str, total_items, total_costo in rows:
+        partes = mes_str.split("-")
+        anio = partes[0] if len(partes) == 2 else mes_str
+        num = partes[1] if len(partes) == 2 else "01"
+        meses.append({
+            "mes": mes_str,
+            "nombre": MESES_ES.get(num, mes_str),
+            "anio": anio,
+            "total_items": total_items,
+            "total_costo": total_costo or 0,
+        })
+
+    return render_template("presupuesto/hub.html", meses=meses)
+
+
+@bp.route("/<mes>")
+@login_required
+def detalle_mes(mes):
+    """Detalle de un mes: tabla con todos los gastos."""
     tipo = request.args.get("tipo", "")
 
     query = _query_base().filter_by(mes=mes)
@@ -31,10 +69,14 @@ def lista():
 
     items = query.order_by(ItemPresupuesto.concepto).all()
 
-    # Totales
     total_costo = sum(i.costo for i in items)
     total_q1 = sum(i.valor_q1 for i in items)
     total_q2 = sum(i.valor_q2 for i in items)
+
+    partes = mes.split("-")
+    num = partes[1] if len(partes) == 2 else "01"
+    anio = partes[0] if len(partes) == 2 else mes
+    nombre_mes = MESES_ES.get(num, mes)
 
     if request.headers.get("HX-Request"):
         return render_template(
@@ -44,8 +86,9 @@ def lista():
         )
 
     return render_template(
-        "presupuesto/lista.html",
+        "presupuesto/detalle_mes.html",
         items=items, mes=mes, tipo=tipo,
+        nombre_mes=nombre_mes, anio=anio,
         total_costo=total_costo, total_q1=total_q1, total_q2=total_q2,
     )
 
@@ -70,7 +113,7 @@ def nuevo():
         db.session.commit()
         registrar_evento("crear", "presupuesto", f"Item: {item.concepto}")
         flash("Gasto agregado al presupuesto.", "success")
-        return redirect(url_for("presupuesto.lista", mes=item.mes))
+        return redirect(url_for("presupuesto.detalle_mes", mes=item.mes))
 
     mes = request.args.get("mes", datetime.today().strftime("%Y-%m"))
     return render_template("presupuesto/form.html", item=None, mes=mes)
@@ -93,7 +136,7 @@ def editar(id):
         db.session.commit()
         registrar_evento("editar", "presupuesto", f"Item: {item.concepto}")
         flash("Gasto actualizado.", "success")
-        return redirect(url_for("presupuesto.lista", mes=item.mes))
+        return redirect(url_for("presupuesto.detalle_mes", mes=item.mes))
 
     return render_template("presupuesto/form.html", item=item, mes=item.mes)
 
@@ -109,7 +152,7 @@ def eliminar(id):
     db.session.commit()
     registrar_evento("eliminar", "presupuesto", f"Item eliminado: {nombre}")
     flash("Gasto eliminado del presupuesto.", "success")
-    return redirect(url_for("presupuesto.lista", mes=mes))
+    return redirect(url_for("presupuesto.detalle_mes", mes=mes))
 
 
 @bp.route("/duplicar-mes", methods=["POST"])
@@ -121,15 +164,15 @@ def duplicar_mes():
     mes_destino = request.form.get("mes_destino", "")
     if not mes_origen or not mes_destino or mes_origen == mes_destino:
         flash("Selecciona un mes origen y destino diferentes.", "warning")
-        return redirect(url_for("presupuesto.lista"))
+        return redirect(url_for("presupuesto.hub"))
 
     items_origen = _query_base().filter_by(mes=mes_origen).all()
     if not items_origen:
         flash(f"No hay items en {mes_origen} para copiar.", "warning")
-        return redirect(url_for("presupuesto.lista"))
+        return redirect(url_for("presupuesto.hub"))
 
     for orig in items_origen:
-        nuevo = ItemPresupuesto(
+        nuevo_item = ItemPresupuesto(
             concepto=orig.concepto,
             tipo=orig.tipo,
             costo=orig.costo,
@@ -140,9 +183,9 @@ def duplicar_mes():
             mes=mes_destino,
             empresa_id=current_user.empresa_id,
         )
-        db.session.add(nuevo)
+        db.session.add(nuevo_item)
 
     db.session.commit()
     registrar_evento("crear", "presupuesto", f"Duplicado {mes_origen} → {mes_destino} ({len(items_origen)} items)")
     flash(f"{len(items_origen)} gastos copiados a {mes_destino}.", "success")
-    return redirect(url_for("presupuesto.lista", mes=mes_destino))
+    return redirect(url_for("presupuesto.detalle_mes", mes=mes_destino))
