@@ -189,3 +189,22 @@ def duplicar_mes():
     registrar_evento("crear", "presupuesto", f"Duplicado {mes_origen} → {mes_destino} ({len(items_origen)} items)")
     flash(f"{len(items_origen)} gastos copiados a {mes_destino}.", "success")
     return redirect(url_for("presupuesto.detalle_mes", mes=mes_destino))
+
+
+@bp.route("/eliminar-mes/<mes>", methods=["POST"])
+@login_required
+@rol_requerido("administrador")
+def eliminar_mes(mes):
+    """Elimina todos los items de un mes."""
+    items = _query_base().filter_by(mes=mes).all()
+    if not items:
+        flash("No hay gastos en ese mes.", "warning")
+        return redirect(url_for("presupuesto.hub"))
+
+    count = len(items)
+    for item in items:
+        db.session.delete(item)
+    db.session.commit()
+    registrar_evento("eliminar", "presupuesto", f"Mes {mes} eliminado ({count} items)")
+    flash(f"Presupuesto de {mes} eliminado ({count} gastos).", "success")
+    return redirect(url_for("presupuesto.hub"))
