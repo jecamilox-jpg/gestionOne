@@ -20,11 +20,11 @@
 <div class="row g-3">
   {% for t in trabajos %}
   <div class="col-md-6 col-lg-4">
-    <a href="{{ url_for('trabajo_fijo.detalle', id=t.id) }}" class="text-decoration-none">
-      <div class="g1-card h-100" style="transition: transform .15s, box-shadow .15s; cursor:pointer;"
-           onmouseenter="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,.1)'"
-           onmouseleave="this.style.transform=''; this.style.boxShadow=''">
-        <div class="g1-card-body">
+    <div class="g1-card h-100" style="transition: transform .15s, box-shadow .15s;"
+         onmouseenter="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,.1)'"
+         onmouseleave="this.style.transform=''; this.style.boxShadow=''">
+      <a href="{{ url_for('trabajo_fijo.detalle', id=t.id) }}" class="text-decoration-none" style="cursor:pointer;">
+        <div class="g1-card-body pb-1">
           <div class="d-flex align-items-center gap-3 mb-3">
             <div style="width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;
                         background: {{ 'linear-gradient(135deg, #10b981, #059669)' if t.estado == 'activo' else 'linear-gradient(135deg, #94a3b8, #64748b)' }};
@@ -58,20 +58,22 @@
               </div>
             </div>
           </div>
+        </div>
+      </a>
 
-          {% if current_user.es_admin %}
-          <div class="mt-3 text-end" onclick="event.preventDefault(); event.stopPropagation();">
-            <form method="post" action="{{ url_for('trabajo_fijo.eliminar', id=t.id) }}"
-                  onsubmit="return confirm('¿Eliminar el empleo {{ t.empresa_nombre|e }}?');" class="d-inline">
-              <button type="submit" class="btn btn-sm btn-outline-danger">
-                <i class="bi bi-trash"></i> Eliminar
-              </button>
-            </form>
-          </div>
-          {% endif %}
+      {% if current_user.es_admin %}
+      <div class="g1-card-body pt-0">
+        <div class="text-end">
+          <form method="post" action="{{ url_for('trabajo_fijo.eliminar', id=t.id) }}"
+                onsubmit="return confirm('¿Eliminar el empleo {{ t.empresa_nombre|e }}?');" class="d-inline">
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-trash"></i> Eliminar
+            </button>
+          </form>
         </div>
       </div>
-    </a>
+      {% endif %}
+    </div>
   </div>
   {% endfor %}
 </div>
