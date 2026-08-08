@@ -8,7 +8,7 @@ from datetime import datetime
 from sqlalchemy import func
 
 from app import db
-from app.models import ItemPresupuesto
+from app.models import ItemPresupuesto, TrabajoFijo
 from app.utils.decoradores import rol_requerido
 from app.utils.auditoria import registrar_evento
 
@@ -78,6 +78,17 @@ def detalle_mes(mes):
     anio = partes[0] if len(partes) == 2 else mes
     nombre_mes = MESES_ES.get(num, mes)
 
+    # Salario quincenal del último trabajo activo
+    trabajo = (
+        TrabajoFijo.query
+        .filter_by(empresa_id=current_user.empresa_id, estado="activo")
+        .order_by(TrabajoFijo.id.desc())
+        .first()
+    )
+    salario_quincenal = (trabajo.neto_mensual / 2) if trabajo else 0
+    libre_q1 = salario_quincenal - total_q1
+    libre_q2 = salario_quincenal - total_q2
+
     if request.headers.get("HX-Request"):
         return render_template(
             "presupuesto/_tabla.html",
@@ -90,6 +101,8 @@ def detalle_mes(mes):
         items=items, mes=mes, tipo=tipo,
         nombre_mes=nombre_mes, anio=anio,
         total_costo=total_costo, total_q1=total_q1, total_q2=total_q2,
+        salario_quincenal=salario_quincenal, libre_q1=libre_q1, libre_q2=libre_q2,
+        trabajo=trabajo,
     )
 
 

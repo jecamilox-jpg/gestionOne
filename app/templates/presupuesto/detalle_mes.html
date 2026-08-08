@@ -40,14 +40,43 @@
       <span class="g1-kpi-value">${{ '{:,.0f}'.format(total_q2) }}</span>
     </div>
   </div>
-  <div class="g1-kpi">
-    <div class="g1-kpi-icon kpi-orange"><i class="bi bi-hash"></i></div>
-    <div class="g1-kpi-body">
-      <span class="g1-kpi-label">Gastos</span>
-      <span class="g1-kpi-value">{{ items|length }}</span>
+</div>
+
+{% if trabajo %}
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="g1-card text-center">
+      <div class="g1-card-body py-3">
+        <div class="text-muted" style="font-size:.75rem; text-transform:uppercase; letter-spacing:.5px;">Salario quincenal</div>
+        <div class="fw-bold fs-5">${{ '{:,.0f}'.format(salario_quincenal) }}</div>
+        <small class="text-muted">{{ trabajo.empresa_nombre }}</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="g1-card text-center" style="border-left: 3px solid {{ '#10b981' if libre_q1 >= 0 else '#ef4444' }};">
+      <div class="g1-card-body py-3">
+        <div class="text-muted" style="font-size:.75rem; text-transform:uppercase; letter-spacing:.5px;">Libre Q1</div>
+        <div class="fw-bold fs-5 {{ 'text-success' if libre_q1 >= 0 else 'text-danger' }}">
+          ${{ '{:,.0f}'.format(libre_q1) }}
+        </div>
+        <small class="text-muted">${{ '{:,.0f}'.format(salario_quincenal) }} − ${{ '{:,.0f}'.format(total_q1) }}</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="g1-card text-center" style="border-left: 3px solid {{ '#10b981' if libre_q2 >= 0 else '#ef4444' }};">
+      <div class="g1-card-body py-3">
+        <div class="text-muted" style="font-size:.75rem; text-transform:uppercase; letter-spacing:.5px;">Libre Q2</div>
+        <div class="fw-bold fs-5 {{ 'text-success' if libre_q2 >= 0 else 'text-danger' }}">
+          ${{ '{:,.0f}'.format(libre_q2) }}
+        </div>
+        <small class="text-muted">${{ '{:,.0f}'.format(salario_quincenal) }} − ${{ '{:,.0f}'.format(total_q2) }}</small>
+      </div>
     </div>
   </div>
 </div>
+{% endif %}
 
 <div class="g1-card">
   <div class="g1-card-header">
