@@ -24,9 +24,43 @@
       <td class="text-muted">{{ i.fecha_pago or '—' }}</td>
       <td>{{ i.destino or '—' }}</td>
       <td class="text-end">{{ '%.0f'|format(i.porcentaje_q1 * 100) }}%</td>
-      <td class="text-end">${{ '{:,.0f}'.format(i.valor_q1) }}</td>
+      <td class="text-end">
+        {% if i.valor_q1 > 0 %}
+        <div class="d-flex align-items-center justify-content-end gap-1">
+          <span>${{ '{:,.0f}'.format(i.valor_q1) }}</span>
+          <form method="post" action="{{ url_for('presupuesto.toggle_pago', id=i.id, quincena='q1') }}" class="d-inline">
+            <button type="submit" class="btn btn-sm p-0 border-0" style="line-height:1;" title="{{ 'Pagado' if i.estado_q1 == 'pago' else 'Marcar como pagado' }}">
+              {% if i.estado_q1 == 'pago' %}
+                <i class="bi bi-check-circle-fill text-success"></i>
+              {% else %}
+                <i class="bi bi-circle text-muted"></i>
+              {% endif %}
+            </button>
+          </form>
+        </div>
+        {% else %}
+          $0
+        {% endif %}
+      </td>
       <td class="text-end">{{ '%.0f'|format(i.porcentaje_q2 * 100) }}%</td>
-      <td class="text-end">${{ '{:,.0f}'.format(i.valor_q2) }}</td>
+      <td class="text-end">
+        {% if i.valor_q2 > 0 %}
+        <div class="d-flex align-items-center justify-content-end gap-1">
+          <span>${{ '{:,.0f}'.format(i.valor_q2) }}</span>
+          <form method="post" action="{{ url_for('presupuesto.toggle_pago', id=i.id, quincena='q2') }}" class="d-inline">
+            <button type="submit" class="btn btn-sm p-0 border-0" style="line-height:1;" title="{{ 'Pagado' if i.estado_q2 == 'pago' else 'Marcar como pagado' }}">
+              {% if i.estado_q2 == 'pago' %}
+                <i class="bi bi-check-circle-fill text-success"></i>
+              {% else %}
+                <i class="bi bi-circle text-muted"></i>
+              {% endif %}
+            </button>
+          </form>
+        </div>
+        {% else %}
+          $0
+        {% endif %}
+      </td>
       <td class="text-end">
         <div class="g1-row-actions">
           {% if current_user.puede_editar %}

@@ -66,6 +66,10 @@ def inicializar_base_datos():
             # (tabla, columna, sentencia ALTER)
             ("empresas", "firma",
              "ALTER TABLE empresas ADD COLUMN firma VARCHAR(255)"),
+            ("items_presupuesto", "estado_q1",
+             "ALTER TABLE items_presupuesto ADD COLUMN estado_q1 VARCHAR(20) DEFAULT 'pendiente'"),
+            ("items_presupuesto", "estado_q2",
+             "ALTER TABLE items_presupuesto ADD COLUMN estado_q2 VARCHAR(20) DEFAULT 'pendiente'"),
         ]
         inspector = inspect(db.engine)
         for tabla, columna, ddl in migraciones:

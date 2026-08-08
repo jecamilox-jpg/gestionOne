@@ -221,3 +221,18 @@ def eliminar_mes(mes):
     registrar_evento("eliminar", "presupuesto", f"Mes {mes} eliminado ({count} items)")
     flash(f"Presupuesto de {mes} eliminado ({count} gastos).", "success")
     return redirect(url_for("presupuesto.hub"))
+
+
+@bp.route("/<int:id>/toggle/<quincena>", methods=["POST"])
+@login_required
+@rol_requerido("administrador", "vendedor")
+def toggle_pago(id, quincena):
+    """Alterna el estado de pago de Q1 o Q2."""
+    item = _query_base().filter_by(id=id).first_or_404()
+    if quincena == "q1":
+        item.estado_q1 = "pago" if item.estado_q1 != "pago" else "pendiente"
+    elif quincena == "q2":
+        item.estado_q2 = "pago" if item.estado_q2 != "pago" else "pendiente"
+    db.session.commit()
+    # Redirigir de vuelta al mes
+    return redirect(url_for("presupuesto.detalle_mes", mes=item.mes))

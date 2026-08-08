@@ -588,6 +588,8 @@ class ItemPresupuesto(db.Model):
     destino = db.Column(db.String(100))                    # Nequi, NuBank, Daviplata, etc.
     porcentaje_q1 = db.Column(db.Float, default=1.0)       # fracción 0-1
     porcentaje_q2 = db.Column(db.Float, default=0.0)       # fracción 0-1
+    estado_q1 = db.Column(db.String(20), default="pendiente")  # pendiente | pago
+    estado_q2 = db.Column(db.String(20), default="pendiente")  # pendiente | pago
     mes = db.Column(db.String(20), nullable=False)         # "2026-08"
     estado = db.Column(db.String(20), default="activo")
     creado_en = db.Column(db.DateTime, default=datetime.utcnow)
