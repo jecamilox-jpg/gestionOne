@@ -78,8 +78,8 @@
       </thead>
       <tbody>
         <tr>
-          <td>Prima de servicios</td>
-          <td class="text-muted">(Salario + Aux.Transporte) × Días / 360</td>
+          <td>Prima {{ trabajo.semestre_label }} ({{ trabajo.dias_semestre }} días en semestre)</td>
+          <td class="text-muted">(Salario + Aux.Transporte) × Días semestre / 360</td>
           <td class="text-end">${{ '{:,.0f}'.format(trabajo.prima) }}</td>
         </tr>
         <tr>

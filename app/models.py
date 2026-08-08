@@ -498,9 +498,32 @@ class TrabajoFijo(db.Model):
         return self.salario_base + self.auxilio_transporte - salud - pension
 
     @property
+    def _inicio_semestre(self):
+        """Inicio del semestre actual (1-ene o 1-jul)."""
+        from datetime import date
+        hoy = date.today()
+        if hoy.month >= 7:
+            return date(hoy.year, 7, 1)
+        return date(hoy.year, 1, 1)
+
+    @property
+    def semestre_label(self):
+        from datetime import date
+        return "S2" if date.today().month >= 7 else "S1"
+
+    @property
+    def dias_semestre(self):
+        """Días trabajados en el semestre actual."""
+        from datetime import date
+        inicio = max(self.fecha_ingreso, self._inicio_semestre)
+        dias = (date.today() - inicio).days
+        return max(dias, 0)
+
+    @property
     def prima(self):
+        """Prima del semestre actual (S1: ene-jun, S2: jul-dic)."""
         base = self.salario_base + self.auxilio_transporte
-        return base * self.dias_trabajados / 360
+        return base * self.dias_semestre / 360
 
     @property
     def cesantias(self):
