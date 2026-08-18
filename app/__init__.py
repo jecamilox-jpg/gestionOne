@@ -62,6 +62,7 @@ def create_app(config_class=None):
     from app.modules.infraestructura import infra_bp
     from app.modules.trabajo_fijo.routes import bp as trabajo_fijo_bp
     from app.modules.presupuesto.routes import bp as presupuesto_bp
+    from app.modules.informes.routes import bp as informes_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(dashboard_bp, url_prefix="/")
@@ -76,6 +77,7 @@ def create_app(config_class=None):
     app.register_blueprint(auditoria_bp, url_prefix="/auditoria")
     app.register_blueprint(usuarios_bp, url_prefix="/usuarios")
     app.register_blueprint(infra_bp)  # rutas tipo /clientes/<id>/infraestructura/...
+    app.register_blueprint(informes_bp, url_prefix="/informes")
 
     # Ruta raíz: redirige al dashboard o login
     @app.route("/inicio")

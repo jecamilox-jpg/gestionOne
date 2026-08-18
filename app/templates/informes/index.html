@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block titulo %}Informe de Estado{% endblock %}
+
+{% block contenido %}
+<div class="g1-page-header">
+  <div>
+    <h1 class="g1-page-title"><i class="bi bi-bar-chart-line"></i> Informe de Estado</h1>
+    <p class="g1-page-sub">{{ current_user.empresa.nombre }} — {{ mes_nombre }} {{ hoy.year }}</p>
+  </div>
+</div>
+
+{# ── Operación comercial ── #}
+<div class="g1-card mb-3">
+  <div class="g1-card-header">
+    <h3 class="g1-card-title"><i class="bi bi-building"></i> Operación Comercial</h3>
+  </div>
+  <div class="g1-card-body">
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <div class="text-center p-3" style="background:var(--bs-light,#f8f9fa); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.5px;">Clientes</div>
+          <div class="fw-bold fs-4">{{ clientes_activos }}</div>
+          <small class="text-muted">de {{ total_clientes }} registrados</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-center p-3" style="background:var(--bs-light,#f8f9fa); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.5px;">Productos</div>
+          <div class="fw-bold fs-4">{{ productos_activos }}</div>
+          <small class="text-muted">de {{ total_productos }} registrados</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-center p-3" style="background:var(--bs-light,#f8f9fa); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.5px;">Cotizaciones mes</div>
+          <div class="fw-bold fs-4">{{ cotizaciones_mes }}</div>
+          <small class="text-muted">${{ '{:,.0f}'.format(cotizaciones_valor_mes) }}</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-center p-3" style="background:var(--bs-light,#f8f9fa); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase; letter-spacing:.5px;">Total cotizaciones</div>
+          <div class="fw-bold fs-4">{{ cotizaciones_total }}</div>
+          <small class="text-muted">histórico</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Cartera ── #}
+<div class="g1-card mb-3">
+  <div class="g1-card-header">
+    <h3 class="g1-card-title"><i class="bi bi-cash-coin"></i> Cartera</h3>
+  </div>
+  <div class="g1-card-body">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="text-center p-3" style="background:linear-gradient(135deg,#fef3c7,#fde68a); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase;">Pendiente</div>
+          <div class="fw-bold fs-4" style="color:#b45309;">${{ '{:,.0f}'.format(valor_pendiente) }}</div>
+          <small class="text-muted">{{ cuentas_pendientes }} cuenta{{ 's' if cuentas_pendientes != 1 }}</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-center p-3" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase;">Pagado total</div>
+          <div class="fw-bold fs-4" style="color:#059669;">${{ '{:,.0f}'.format(valor_pagado) }}</div>
+          <small class="text-muted">{{ cuentas_pagadas }} cuenta{{ 's' if cuentas_pagadas != 1 }}</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-center p-3" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase;">Recaudado {{ mes_nombre }}</div>
+          <div class="fw-bold fs-4" style="color:#7c3aed;">${{ '{:,.0f}'.format(valor_pagado_mes) }}</div>
+          <small class="text-muted">este mes</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Top clientes ── #}
+{% if top_clientes %}
+<div class="g1-card mb-3">
+  <div class="g1-card-header">
+    <h3 class="g1-card-title"><i class="bi bi-trophy"></i> Top 5 Clientes por Facturación</h3>
+  </div>
+  <div class="g1-card-body p-0">
+    <table class="g1-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Cliente</th>
+          <th class="text-end">Cuentas</th>
+          <th class="text-end">Total facturado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for nombre, num, total in top_clientes %}
+        <tr>
+          <td><span class="g1-badge badge-info">{{ loop.index }}</span></td>
+          <td class="fw-semibold">{{ nombre }}</td>
+          <td class="text-end">{{ num }}</td>
+          <td class="text-end fw-bold">${{ '{:,.0f}'.format(total) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{# ── Trabajo fijo ── #}
+{% if trabajo_activo %}
+<div class="g1-card mb-3">
+  <div class="g1-card-header">
+    <h3 class="g1-card-title"><i class="bi bi-briefcase-fill"></i> Empleo Activo</h3>
+  </div>
+  <div class="g1-card-body">
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <div class="text-center p-3" style="background:var(--bs-light,#f8f9fa); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase;">Empresa</div>
+          <div class="fw-bold" style="font-size:.95rem;">{{ trabajo_activo.empresa_nombre }}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-center p-3" style="background:var(--bs-light,#f8f9fa); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase;">Neto mensual</div>
+          <div class="fw-bold fs-5">${{ '{:,.0f}'.format(trabajo_activo.neto_mensual) }}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-center p-3" style="background:var(--bs-light,#f8f9fa); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase;">Días trabajados</div>
+          <div class="fw-bold fs-5">{{ trabajo_activo.dias_trabajados }}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-center p-3" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase;">Liquidación</div>
+          <div class="fw-bold fs-5" style="color:#059669;">${{ '{:,.0f}'.format(trabajo_activo.liquidacion) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ── Presupuesto del mes ── #}
+{% if items_ppto %}
+<div class="g1-card mb-3">
+  <div class="g1-card-header">
+    <h3 class="g1-card-title"><i class="bi bi-wallet2"></i> Presupuesto {{ mes_nombre }}</h3>
+  </div>
+  <div class="g1-card-body">
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <div class="text-center p-3" style="background:var(--bs-light,#f8f9fa); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase;">Total mes</div>
+          <div class="fw-bold fs-5">${{ '{:,.0f}'.format(ppto_total) }}</div>
+          <small class="text-muted">{{ items_ppto|length }} gastos</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-center p-3" style="background:var(--bs-light,#f8f9fa); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase;">Q1 (día 15)</div>
+          <div class="fw-bold fs-5">${{ '{:,.0f}'.format(ppto_q1) }}</div>
+          <small class="text-muted">Pagado: ${{ '{:,.0f}'.format(ppto_pagados_q1) }}</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="text-center p-3" style="background:var(--bs-light,#f8f9fa); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase;">Q2 (día 30)</div>
+          <div class="fw-bold fs-5">${{ '{:,.0f}'.format(ppto_q2) }}</div>
+          <small class="text-muted">Pagado: ${{ '{:,.0f}'.format(ppto_pagados_q2) }}</small>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        {% set pct_pagado = ((ppto_pagados_q1 + ppto_pagados_q2) / ppto_total * 100) if ppto_total > 0 else 0 %}
+        <div class="text-center p-3" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe); border-radius:10px;">
+          <div class="text-muted" style="font-size:.7rem; text-transform:uppercase;">Cumplimiento</div>
+          <div class="fw-bold fs-5" style="color:#7c3aed;">{{ '%.0f'|format(pct_pagado) }}%</div>
+          <small class="text-muted">del mes pagado</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="text-muted text-center mt-4" style="font-size:.8rem;">
+  Informe generado el {{ hoy.strftime('%d/%m/%Y') }} — GestiónOne
+</div>
+{% endblock %}

@@ -56,6 +56,11 @@
          class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('usuarios.') %}active{% endif %}">
         <i class="bi bi-person-badge-fill"></i> <span class="label">Usuarios</span>
       </a>
+      <a href="{{ url_for('informes.index') }}"
+         class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('informes.') %}active{% endif %}">
+        <i class="bi bi-bar-chart-line"></i> <span class="label">Informes</span>
+      </a>
+
       <a href="{{ url_for('auditoria.lista') }}"
          class="g1-nav-link {% if request.endpoint and request.endpoint.startswith('auditoria.') %}active{% endif %}">
         <i class="bi bi-shield-check"></i> <span class="label">Auditoría</span>

@@ -365,3 +365,89 @@ body {
     padding: 12px;
   }
 }
+
+/* ============================================================
+   FICHAS / CARDS - Trabajo Fijo & Presupuesto hub (mobile)
+   ============================================================ */
+@media (max-width: 768px) {
+  /* Cards grid: 1 columna en móvil */
+  .row.g-3 > .col-md-6,
+  .row.g-3 > .col-md-4,
+  .row.g-3 > .col-lg-4,
+  .row.g-3 > .col-xl-3 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  /* Fichas más compactas */
+  .g1-card .row.g-2.text-center > div > div {
+    padding: 6px 4px !important;
+  }
+  .g1-card .row.g-2.text-center > div > div .fw-bold {
+    font-size: .8rem !important;
+  }
+
+  /* Presupuesto detalle: KPIs libre en columna */
+  .row.g-3.mb-3 > .col-md-4 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  /* Tabla presupuesto: scroll horizontal con hint visual */
+  .g1-card-body.p-0 {
+    position: relative;
+  }
+  .g1-card-body.p-0::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 100%;
+    background: linear-gradient(to left, rgba(255,255,255,.8), transparent);
+    pointer-events: none;
+  }
+
+  /* Duplicar mes form: stack vertical */
+  .g1-card .row.g-2.align-items-end {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .g1-card .row.g-2.align-items-end > .col-auto {
+    width: 100%;
+  }
+  .g1-card .row.g-2.align-items-end .bi-arrow-right {
+    display: none;
+  }
+
+  /* Detalle trabajo fijo: cards full width */
+  .row.g-4.mb-4 > .col-md-6 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  /* Toggle pago buttons más grandes para touch */
+  .d-flex.align-items-center.justify-content-end.gap-1 .btn {
+    min-height: 32px;
+    min-width: 32px;
+    padding: 4px;
+  }
+  .d-flex.align-items-center.justify-content-end.gap-1 .bi {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Fichas aún más compactas */
+  .g1-card .d-flex.align-items-center.gap-3 {
+    gap: .5rem !important;
+  }
+  .g1-card .d-flex.align-items-center.gap-3 > div[style*="48px"] {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 1rem !important;
+  }
+  .g1-card .d-flex.align-items-center.gap-3 h5 {
+    font-size: .95rem !important;
+  }
+}
