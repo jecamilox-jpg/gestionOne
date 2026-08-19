@@ -67,12 +67,12 @@ def index():
         else:
             fin = datetime(anio, mes + 1, 1).date()
         total = (
-            db.session.query(func.coalesce(func.sum(Cotizacion.total), 0))
+            db.session.query(func.coalesce(func.sum(CuentaCobro.valor), 0))
             .filter(
-                Cotizacion.empresa_id == empresa_id,
-                Cotizacion.fecha >= inicio,
-                Cotizacion.fecha < fin,
-                Cotizacion.estado != "anulada",
+                CuentaCobro.empresa_id == empresa_id,
+                CuentaCobro.fecha >= inicio,
+                CuentaCobro.fecha < fin,
+                CuentaCobro.estado != "anulada",
             )
             .scalar()
         )
